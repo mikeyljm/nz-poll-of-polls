@@ -1,13 +1,16 @@
 name: Scraper check
 
-# Manual: fetch a Wikipedia polling page, run the scraper on it, and keep the raw HTML
-# as an artifact so the parser can be tested against the real page.
+# Manual: fetch a Wikipedia polling page, run the scraper on it, and commit the raw HTML
+# to tests/fixtures/ so the parser can be tested against the real page.
 on:
   workflow_dispatch:
     inputs:
       page:
         description: "Wikipedia page title"
         default: "Opinion polling for the 2026 New Zealand general election"
+
+permissions:
+  contents: write
 
 jobs:
   check:
@@ -18,8 +21,9 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install pandas requests beautifulsoup4 lxml html5lib
-      - run: python pipeline/scrape_polls.py --page "${{ inputs.page }}" --out check/polls.csv --save-html check/page.html
-      - uses: actions/upload-artifact@v4
-        with:
-          name: scraper-check
-          path: check/
+      - run: python pipeline/scrape_polls.py --page "${{ inputs.page }}" --out tests/fixtures/check_polls.csv --save-html tests/fixtures/wikipedia_page.html
+      - run: |
+          git config user.name "poll-of-polls-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add tests/fixtures
+          git diff --cached --quiet || (git commit -m "Scraper check: save page fixture" && git pull --rebase && git push)
