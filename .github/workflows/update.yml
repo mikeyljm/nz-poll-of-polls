@@ -34,7 +34,11 @@ jobs:
       TZ: Pacific/Auckland          # so "today" is the NZ date
       PYTHONUNBUFFERED: "1"
     steps:
+      # Always start from the latest main, not the commit that triggered the run:
+      # queued runs would otherwise work on stale data and clash when saving.
       - uses: actions/checkout@v4
+        with:
+          ref: main
 
       - uses: actions/setup-python@v5
         with:
@@ -60,8 +64,9 @@ jobs:
             echo "Nothing to commit."
           else
             git commit -m "Update polls and site data ($(date +'%Y-%m-%d %H:%M %Z'))"
-            git pull --rebase
-            git push
+            # If another run saved in the meantime, keep this run's freshly generated files.
+            git pull --rebase -X theirs origin main
+            git push origin HEAD:main
           fi
 
       - uses: actions/configure-pages@v5
