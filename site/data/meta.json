@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-07T04:21+00:00",
+ "updated": "2026-11-07T04:49+00:00",
  "as_of_week": "2026-11-07",
  "model_end": "2026-11-07",
  "last_poll": "2026-11-03",
@@ -64,7 +64,7 @@
   "draws": 4000,
   "sampler": "nutpie"
  },
- "input_hash": "34739eb019aa6d41",
+ "input_hash": "284c45520476a612",
  "iso_week": [
   2026,
   45
