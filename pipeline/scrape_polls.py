@@ -63,10 +63,16 @@ ORG_PATTERNS = [
     (r"ipsos", "IPS"),
     (r"yougov", "YGV"),
 ]
-# Headings whose tables are NOT nationwide party-vote polls
+# Only tables in the top-level "Party vote" section are nationwide party-vote polls.
+# The page also has electorate, subnational (e.g. Auckland), demographic (men, women,
+# Māori roll, Pacific voters, age groups) and leadership tables with the same columns.
+KEEP_H2 = re.compile(r"party vote|nationwide|national poll", re.I)
+# Within that section, sub-headings that still mark a subset of voters
 SKIP_HEADINGS = re.compile(
     r"electorate|preferred|prime minister|favourab|direction|seat|leader|projection|"
-    r"hypothetical|referend|issue|coalition|approval|by region|māori roll|maori roll", re.I)
+    r"hypothetical|referend|issue|coalition|approval|region|subnational|demographic|"
+    r"male|female|women|men\b|roll|voters|age group|pacific|māori|maori|auckland|"
+    r"christchurch|wellington", re.I)
 
 MONTHS = {m: i for i, m in enumerate(
     ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"], 1)}
@@ -182,7 +188,9 @@ def party_tables(html: str) -> list[pd.DataFrame]:
             continue
         if "wikitable" not in (el.get("class") or []):
             continue
-        if any(SKIP_HEADINGS.search(h) for h in path.values()):
+        if not KEEP_H2.search(path.get(2, "")):
+            continue
+        if any(SKIP_HEADINGS.search(h) for lvl, h in path.items() if lvl > 2):
             continue
         try:
             df = pd.read_html(io.StringIO(str(el)))[0]

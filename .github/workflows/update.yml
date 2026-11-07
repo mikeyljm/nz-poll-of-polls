@@ -44,6 +44,9 @@ jobs:
       - name: Install
         run: pip install -r requirements.txt
 
+      - name: Scraper tests
+        run: python tests/test_scraper.py
+
       - name: Scrape polls and refit if anything changed
         id: run
         run: python pipeline/run_update.py ${{ inputs.force && '--force' || '' }}
