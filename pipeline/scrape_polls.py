@@ -238,12 +238,16 @@ def main(argv=None) -> int:
     ap.add_argument("--page", help="Wikipedia page title (default: the 2029 cycle page)")
     ap.add_argument("--html", help="parse a saved HTML file instead of fetching")
     ap.add_argument("--out", default=str(OUT))
+    ap.add_argument("--save-html", help="also save the fetched page HTML here (for tests)")
     a = ap.parse_args(argv)
 
     if a.html:
         title, html = Path(a.html).stem, Path(a.html).read_text(encoding="utf-8")
     else:
         title, html = fetch_page([a.page] if a.page else PAGES)
+    if html is not None and a.save_html:
+        Path(a.save_html).parent.mkdir(parents=True, exist_ok=True)
+        Path(a.save_html).write_text(html, encoding="utf-8")
     if html is None:
         print("No polling page yet; nothing to scrape.")
         polls = parse_html("", "")
