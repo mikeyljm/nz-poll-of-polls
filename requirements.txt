@@ -1,0 +1,14 @@
+pymc>=5.20
+nutpie
+arviz
+h5netcdf
+pandas
+numpy
+pyyaml
+requests
+beautifulsoup4
+lxml
+html5lib
+shapely
+pyshp
+pyproj

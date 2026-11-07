@@ -1,0 +1,60 @@
+Electorate Candidate and Party Votes Recorded at Each Polling Place
+"Ilam 19","Candidate Vote Details"
+,,"ALEXANDER, Marc Antonius","ANDERSON, Blair John","BLANCHARD, Julian Malcolm","BROWNLEE, Gerard Anthony","FINDLAY, Quentin James","GILES, Joanne Mary","GRIFFITHS, Lois Beverly","ZHANG, Zemin","Total Valid Candidate Votes","Informal Candidate Votes"
+"Avonhead","Avonhead Kindergarten, 49 Staveley Street",47,6,328,450,1,26,39,29,926,12
+,"Avonhead School Hall, 55 Avonhead Road",70,6,407,638,1,34,42,18,1216,17
+,"Merrin School Hall, 41 Merrin Street",84,4,532,1109,7,38,74,36,1884,27
+,"St Christopher's Church Warren Hall, 244 Avonhead Road",63,1,179,397,2,11,30,19,702,10
+,"St Mark's Church Main Lounge, 150 Withells Road",54,4,227,443,3,22,24,17,794,6
+"Bishopdale","Breens Intermediate School Hall, 85 Breens Road",49,4,329,360,6,17,24,13,802,14
+,"Crossroads at Bishopdale, cnr Farrington Ave and Kilburn St",36,3,433,314,0,18,43,18,865,15
+,"Isleworth School Hall, 59A Farrington Avenue",34,4,328,321,1,13,27,17,745,13
+"Bryndwr","Aorangi School Hall, Colwyn Street",39,1,202,180,1,16,41,10,490,7
+,"St Mathew's Church Main Hall, Jeffreys Road",44,6,194,420,2,16,51,8,741,15
+,"St Stephen's Presbyterian Church Hall, cnr Ilam and Aorangi Roads",43,4,260,243,3,12,32,22,619,9
+,"Wairakei School Hall, 250 Wairakei Road",84,5,468,521,5,24,92,25,1224,11
+"Burnside","Burnside High School J Block, Memorial Avenue entrance",18,0,191,283,2,10,31,6,541,2
+,"Elim Church, 193 Grahams Road",50,1,247,305,0,25,24,5,657,10
+,"Kendal School Hall, 53 Kendal Avenue",58,15,446,497,2,44,55,24,1141,9
+,"Roydvale School Hall, 117 Roydvale Avenue",33,0,228,429,3,19,38,10,760,4
+"Christchurch City ","Christchurch Central Public Library, cnr Gloucester St & Oxford Tce",3,1,39,39,0,2,8,6,98,3
+,"Christchurch Hospital, The Great Escape Cafe",3,1,16,33,0,0,3,0,56,0
+,"The Arts Centre, Hurst Seager Room, cnr Hereford Street & Rolleston Avenue",5,1,18,24,0,2,9,0,59,0
+"Fendalton","Christchurch Boys High School, Big Room, Straven Road",31,4,176,442,2,27,47,7,736,3
+,"Fairleigh Kindergarten, 27A Garden Road",18,0,78,530,0,11,27,5,669,2
+,"Fendalton Community Centre (former old library), 170 Clyde Road",56,5,377,969,4,42,92,18,1563,16
+,"Medbury Preparatory School Hall, 109 Clyde Road, (cnr Creyke Road)",30,1,175,465,1,19,40,7,738,9
+,"St Barnabas Church Hall, Fendalton Road",33,2,128,665,0,31,31,6,896,6
+"Harewood","Harewood Playcentre, 719 Harewood Rd",10,0,49,147,0,4,5,2,217,1
+"Ilam","Ilam School Hall, 66 Ilam Road",93,18,688,779,2,62,153,52,1847,20
+,"Waimairi Road Community Centre Front Hall, 166-168 Waimairi Road",48,5,255,445,0,20,34,39,846,12
+,"Westburn School Hall, 257 Waimairi Road",52,7,341,659,2,47,76,41,1225,23
+"Merivale","Heaton Intermediate School, Centre for Performing Arts, 125-133 Heaton Street",29,1,114,367,1,16,24,4,556,1
+,"Rangi Ruru Girls' School Hall, 59 Hewitts Road",33,0,272,586,6,28,80,14,1019,9
+,"St Mary's Parish Centre Main Hall, 30 Church Lane (cnr Papanui Road)",16,3,121,332,1,8,34,8,523,4
+"Papanui","Papanui Methodist Church Hall, 68 Harewood Rd (cnr Chapel St)",38,3,216,234,0,11,42,8,552,17
+,"St Paul's Anglican Church Lounge, 1 Harewood Rd",21,3,132,147,0,4,20,9,336,1
+,"Waimairi School Hall, Tillman Avenue",48,6,395,491,6,31,82,17,1076,7
+"Riccarton","New Zealand CCS (Inc) Lounge, 27 Kilmarnock Street",12,0,88,175,1,9,28,4,317,6
+,"NZ Blood Donor Service, 87 Riccarton Road",5,0,38,99,0,6,14,8,170,1
+,"St Ninian's Presbyterian Church Hall, 9 Puriri St",23,2,117,216,1,13,27,6,405,8
+,"Wharenui School, Matipo St",8,0,29,58,1,4,9,4,113,1
+"Russley","Russley School, 75 Cutts Road",26,1,166,375,2,27,27,7,631,11
+"Upper Riccarton","Villa Maria College Hall, Brodie Street",49,4,182,250,1,6,35,26,553,10
+,"Polling places where less than 6 votes were taken",0,0,0,0,0,0,0,0,0,0
+,"Hospital Votes",11,9,208,202,4,8,13,21,476,41
+,"Ordinary Votes BEFORE polling day",92,8,643,1500,1,41,106,22,2413,23
+,"Special Votes BEFORE polling day",14,0,131,278,2,9,20,5,459,6
+,"Special Votes On polling day",76,15,754,1221,6,55,223,56,2406,38
+,"Overseas Special Votes including defence force",27,1,244,372,2,7,58,7,718,8
+,"Ilam Total",1716,165,11189,19010,85,895,2034,686,35780,468
+,,,,,,,,,"Valid Candidate Votes plus Informal Candidate Votes",36248
+"Electorate Candidate Valid Votes","Party",,"BROWNLEE, Gerard Anthony - majority 7821"
+"ALEXANDER, Marc Antonius",United Future New Zealand,1716,.0479597541
+"ANDERSON, Blair John",Independent,165,.0046115148
+"BLANCHARD, Julian Malcolm",Labour Party,11189,.3127166015
+"BROWNLEE, Gerard Anthony",National Party,19010,.5313024036
+"FINDLAY, Quentin James",Alliance,85,.0023756288
+"GILES, Joanne Mary",ACT New Zealand,895,.0250139743
+"GRIFFITHS, Lois Beverly",Green Party,2034,.0568474008
+"ZHANG, Zemin",Jim Anderton's Progressive,686,.0191727222

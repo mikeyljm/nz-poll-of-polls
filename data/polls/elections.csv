@@ -1,0 +1,6 @@
+date,status,NAT,LAB,GRN,ACT,NZF,TPM,OPP,note
+# Official party-vote results (%), used as near-exact "polls" that anchor pollster house effects.
+# status: official | preliminary. Preliminary results are used until the official ones are entered.
+# Add the 2026 result here (election night preliminary, then official on 27 November 2026).
+2020-10-17,official,25.58,50.01,7.86,7.59,2.60,1.17,1.51,Electoral Commission official result
+2023-10-14,official,38.08,26.92,11.61,8.64,6.09,3.08,2.22,Electoral Commission official result

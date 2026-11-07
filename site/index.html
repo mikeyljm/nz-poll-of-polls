@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en-NZ">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Poll of polls · Kōrero and Complexity</title>
+<meta name="description" content="A Bayesian average of New Zealand party-vote polls, seat and coalition probabilities, and how every voting place leans, updated automatically.">
+<link rel="stylesheet" href="assets/vendor/leaflet.css">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap">
+    <p class="kicker"><a href="https://mikeyljmiller.substack.com">Kōrero and Complexity</a></p>
+    <h1>New Zealand poll of polls</h1>
+    <p class="lede">Party vote, seats and coalitions from every published poll, and how each voting place leans compared with the country.</p>
+    <p class="updated" id="updated">Loading…</p>
+    <nav class="toc" aria-label="Sections">
+      <a href="#vote">Party vote</a><a href="#seats">Seats</a><a href="#pollsters">Pollsters</a><a href="#polls">Polls</a><a href="#places">Voting places</a><a href="#electorates">Electorates</a><a href="#method">Method</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div id="banner" class="banner" hidden></div>
+
+  <section id="vote">
+    <h2>Party vote</h2>
+    <p class="sub" id="vote-sub"></p>
+    <div class="tiles" id="tiles"></div>
+    <div class="chart-head">
+      <h3>Trend</h3>
+      <div class="seg" role="group" aria-label="Time range" id="range">
+        <button data-from="cycle" aria-pressed="true">This term</button>
+        <button data-from="2023-10-14">Since 2023</button>
+        <button data-from="2020-10-17">Since 2020</button>
+      </div>
+    </div>
+    <div class="legend" id="trend-legend"></div>
+    <div class="chart" id="trend"></div>
+    <p class="note">Lines are the model's estimate of true vote intention; shaded bands are 90% intervals. Dots are individual polls. Hover for values.</p>
+  </section>
+
+  <section id="final-check" hidden>
+    <h2>How the final 2026 projection did</h2>
+    <p class="sub" id="final-sub"></p>
+    <div class="chart" id="final"></div>
+  </section>
+
+  <section id="seats">
+    <h2>Seats if an election were held today</h2>
+    <p class="sub" id="seats-sub"></p>
+    <div class="two">
+      <div>
+        <h3>Who could govern?</h3>
+        <div id="headline"></div>
+        <h3>Coalitions reaching a majority</h3>
+        <div id="coalitions"></div>
+      </div>
+      <div>
+        <h3>Seats by party</h3>
+        <div class="chart" id="seatbars"></div>
+        <p class="note">Bar: median seats. Whisker: 90% interval. Electorate outcomes for ACT, Te Pāti Māori and others are assumptions; see <a href="#method">Method</a>.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="pollsters">
+    <h2>Pollster house effects</h2>
+    <p class="sub">How far each pollster's results sit from the model's estimate for each party, in percentage points, judged against past election results. Positive means the pollster tends to show that party higher.</p>
+    <div class="table-wrap" id="house"></div>
+  </section>
+
+  <section id="polls">
+    <h2>Polls</h2>
+    <p class="sub" id="polls-sub"></p>
+    <div class="table-wrap" id="polltable"></div>
+  </section>
+
+  <section id="places">
+    <h2>How every voting place leans</h2>
+    <p class="sub">Each dot is a suburb or town's election-day voting places, sized by votes. Colour shows how far its party vote sat from the national result: a place that gave National 45% when the country gave 38% leans +7 to National. General electorates only.</p>
+    <div class="controls">
+      <label>Party <select id="lean-party"></select></label>
+      <label>Measure <select id="lean-measure">
+        <option value="latest">Latest election</option>
+        <option value="recent">Recent average (last three elections)</option>
+        <option value="trend">Trend, extended to next election</option>
+      </select></label>
+      <label class="check"><input type="checkbox" id="show-seats" checked> Electorate boundaries</label>
+    </div>
+    <div class="map-layout">
+      <div id="map" role="region" aria-label="Map of voting place leans"></div>
+      <aside id="place-panel" class="panel"><p class="muted">Select a dot to see that place's history.</p></aside>
+    </div>
+    <div class="legend" id="map-legend"></div>
+  </section>
+
+  <section id="electorates">
+    <h2>Electorates</h2>
+    <p class="sub" id="elec-sub"></p>
+    <div class="tiles small" id="elec-counts"></div>
+    <div class="controls">
+      <label>Method <select id="elec-method">
+        <option value="recent">Recent lean (central)</option>
+        <option value="mean">Average lean since 2002</option>
+        <option value="trend">Trend lean</option>
+      </select></label>
+      <label>Search <input type="search" id="elec-search" placeholder="Electorate"></label>
+    </div>
+    <div class="table-wrap" id="electable"></div>
+  </section>
+
+  <section id="method" class="prose">
+    <h2>Method</h2>
+    <h3>Poll of polls</h3>
+    <p>True party-vote intention is modelled week by week as a random walk on the log-ratio scale, so shares always add to 100. Each poll is a noisy reading of that week's true value, shifted by the pollster's <em>house effect</em> (a persistent lean, plus drift between terms) and by an <em>industry</em> error shared by every poll in a term. Past election results enter as near-exact readings with no house effect, which is what anchors everything else. Because the current term has no result yet, its industry error comes from how large it has been in past terms: that is the main source of uncertainty, and the reason the bands are wider than a simple average's.</p>
+    <p>The model is fitted in PyMC every time a new poll appears, and again weekly so the estimate keeps moving forward between polls. Polls are collected from the Wikipedia polling page each morning; earlier polls come from the <a href="https://github.com/Nixinova/NZPolls">NZPolls</a> dataset.</p>
+    <h3>Seats</h3>
+    <p>For each of thousands of simulated election results, seats are allocated under MMP: the 5% threshold or one-electorate exemption, Sainte-Laguë over 120 seats, and overhang. Party-vote polls say little about individual electorates, so the electorates that can change the totals (ACT's seats, the Māori electorates, Green-held seats) use stated probabilities that move with each party's national vote. Those assumptions are listed below.</p>
+    <div id="assumptions"></div>
+    <h3>Voting places and electorates</h3>
+    <p>Election-day voting places are grouped by suburb or town using the Electoral Commission's results by voting place for every election since 2002. A place's <em>lean</em> is its party share minus the national share. Advance and special votes can't be placed on a map, so they enter the electorate projections as each electorate's gap between all votes and election-day votes.</p>
+    <p>Electorate projections add each place's lean to the poll-of-polls median (a uniform swing), place each locality inside the 2026 boundaries, and then model the candidate vote: each candidate's personal vote plus the share of other parties' voters who typically split their vote toward them. Each seat assumes the last election's candidates stand again unless set otherwise. Advance-vote patterns, retirements and local campaigns can all move a seat, so treat close seats as close.</p>
+    <h3>What this is not</h3>
+    <p>This is an average of published polls and a description of past voting patterns, not a prediction of how anyone should vote. Polls measure intention at the time; they can all be wrong in the same direction.</p>
+    <p class="muted">Data: Wikipedia, NZPolls, Electoral Commission (results by voting place), Stats NZ (electorate boundaries), LINZ (suburbs and localities). Code: <a id="repo-link" href="#">GitHub</a>. Built by Michael Miller, Te Pūnaha Matatini.</p>
+  </section>
+</main>
+<div id="tooltip" class="tooltip" role="tooltip" hidden></div>
+<script src="assets/vendor/d3.min.js"></script>
+<script src="assets/vendor/leaflet.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>

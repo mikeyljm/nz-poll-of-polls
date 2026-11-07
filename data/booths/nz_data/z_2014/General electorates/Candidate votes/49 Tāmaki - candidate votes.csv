@@ -1,0 +1,59 @@
+﻿Electorate Candidate Votes Recorded at Each Voting Place
+"Tāmaki 49","Candidate Vote Details"
+,,"GIBSON, Lisa Belle","MILNE, Michael John","MOUNTAIN, Daniel Luke","O'CONNOR, Simon","SIGGAARD, Dorthe","WU, Chao-Fu","Total Valid Candidate Votes","Informal Candidate Votes"
+"Auckland City","Auckland High Court, corner Waterloo Quadrant & Parliament Street",0,1,0,15,4,10,30,0
+,"AUT Wellesley Campus, Building WA, Conference Room, Gate 2, 55 Wellesley Street ",0,0,1,7,2,3,13,0
+,"Liston House, 30-32 Hobson Street",0,0,1,14,3,3,21,0
+"Ellerslie","Christ Church Anglican Church, 169 Ladies Mile",1,1,5,86,14,13,120,2
+,"Michael Park School, 55 Amy Street",0,0,0,11,3,1,15,0
+,"St Mary's Church Hall, 66 Main Highway",0,0,0,15,8,5,28,0
+,"YMCA Centre, Downstairs Childcare Centre, 46 Michaels Avenue",0,1,0,17,4,3,25,0
+"Glen Innes","Glen Innes Primary School, 38-42 Eastview Road",15,5,7,146,38,203,414,5
+,"Glenbrae School, 103 Leybourne Circle",5,1,6,30,18,194,254,10
+,"Grace International, 77 Line Road",8,1,3,141,32,152,337,13
+,"Sacred Heart College, 250 West Tamaki Road",4,4,8,335,73,99,523,3
+,"Tamaki College, corner Elstree Avenue & Taniwha Street",7,2,4,81,47,283,424,18
+"Glendowie","Churchill Park School, Kinsale Street",1,3,6,453,71,35,569,4
+,"Glen Taylor Primary School, 172 West Tamaki Road",6,12,14,395,94,161,682,16
+,"Glendowie Primary School, 217 Riddell Road",8,5,19,900,107,120,1159,9
+"Grafton","Auckland City Hospital, Foyer, 2 Park Road",0,0,0,24,8,10,42,2
+"Kohimarama","Kohimarama Primary School, 112 Kohimarama Road",6,14,13,885,108,95,1121,11
+,"Presbyterian Church Hall, 34 Kohimarama Road",1,1,9,418,54,50,533,5
+,"St Thomas's School, 113 Allum Street",11,20,27,1082,155,157,1452,19
+"Meadowbank","St Chad's Church Hall, 38 St John's Road",7,24,40,1182,195,207,1655,21
+,"St John's College, Wesley Hall, 202-210 St John's Road",17,29,20,758,164,207,1195,11
+,"Tahapa Crescent Hall, 22 Tahapa Crescent",5,6,6,289,58,55,419,7
+"Mechanics Bay","Auckland Marine Rescue Centre, 3 Solent Street",1,1,0,17,3,1,23,0
+"Mission Bay","Patteson Guide Hall, 87 Patteson Avenue",4,17,10,617,66,90,804,9
+"Mt Wellington","Panmure District School, 87 Mt Wellington Highway",0,2,4,19,3,13,41,1
+,"Stanhope Road School, 2B Harris Road",0,0,0,9,2,7,18,1
+"Orakei","Orakei Presbyterian Church Hall, 162 Coates Avenue",23,15,21,519,115,158,851,18
+,"Orakei Primary School, 1 Grace Street",4,10,11,551,77,58,711,5
+"Panmure","Tamaki Primary School, 11A Alamein Road",1,0,0,7,1,5,14,1
+"Parnell","Jubilee Hall, Parnell Community Centre, 545 Parnell Road",0,1,1,21,3,5,31,0
+,"Parnell District School, 48 St Stephens Avenue",0,0,0,23,1,2,26,0
+"Point England","Point England Primary School, 130 Point England Road",2,2,1,16,15,50,86,0
+"Remuera","Baptist Church, 641 Remuera Road",1,20,9,405,72,72,579,10
+,"Meadowbank Primary School, 68 Waiatarua Road",0,15,10,435,56,48,564,3
+,"Remuera Intermediate School, 64-72 St Vincent Avenue",4,2,6,88,12,16,128,1
+,"Somervell Presbyterian Church and Community Centre, 497 Remuera Road",1,10,11,264,64,41,391,3
+,"St Mark's Church Hall, 95 Remuera Road",0,2,2,17,3,2,26,2
+"St Heliers","Lawn Tennis Club, 3 Goldie Street",4,10,12,727,90,72,915,6
+,"St Heliers Primary School, 126-160 St Heliers Bay Road",5,18,19,1306,162,150,1660,17
+,"St Ignatious Church, 12 Kotiri Street ",4,3,14,333,33,41,428,3
+,"St Philips Church Hall, corner Tuhimata Street & St Heliers Bay Road",2,9,5,424,51,49,540,5
+"Stonefields","Stonefields School, 81 Tihi Street",5,22,16,1023,82,113,1261,9
+,"Voting places where less than 6 votes were taken",0,0,0,0,0,0,0,0
+,"Ordinary Votes BEFORE polling day",76,127,204,8534,915,1377,11233,138
+,"Special Votes BEFORE polling day",20,16,21,685,146,241,1129,15
+,"Special Votes On polling day",39,28,31,1301,315,324,2038,30
+,"Overseas Special Votes including Defence Force",4,14,13,914,164,117,1226,5
+,"Tāmaki Total",302,474,610,25539,3711,5118,35754,438
+,,,,,,,"Valid Candidate Votes plus Informal Candidate Votes",36192
+"Electorate Candidate Valid Votes","Party",,"O'CONNOR, Simon - majority 20421"
+"GIBSON, Lisa Belle",MANA Movement,302,.0084466074
+"MILNE, Michael John",ACT New Zealand,474,.0132572579
+"MOUNTAIN, Daniel Luke",Conservative,610,.0170610281
+"O'CONNOR, Simon",National Party,25539,.714297701
+"SIGGAARD, Dorthe",Green Party,3711,.1037925826
+"WU, Chao-Fu",Labour Party,5118,.143144823

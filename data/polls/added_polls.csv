@@ -1,0 +1,18 @@
+date_start,date_end,org,n,NAT,LAB,GRN,ACT,NZF,TPM,OPP,source
+# Roy Morgan polls missing from the NZPolls YAML (Dec 2022 to Oct 2023), from the Wikipedia 2023 polling page.
+# "Dec 2022" has no exact fieldwork dates on Wikipedia; dates below are approximate.
+2022-11-28,2022-12-31,ROY,947,35,27.5,11,14.5,4,4,2.5,Wikipedia 2023 polling page (dates approximate)
+2023-01-09,2023-01-29,ROY,948,32,30,12,13.5,5,4.5,1.5,Wikipedia 2023 polling page
+2023-01-30,2023-02-26,ROY,943,32,33,12.5,13.5,2,3.5,2.5,Wikipedia 2023 polling page
+2023-02-27,2023-03-26,ROY,943,32,33,10.5,13,3,2,3.5,Wikipedia 2023 polling page
+2023-03-27,2023-04-23,ROY,929,32,30,12,12.5,4.5,4.5,2,Wikipedia 2023 polling page
+2023-04-24,2023-05-21,ROY,952,31.5,31,12,13.5,3.5,4.5,2,Wikipedia 2023 polling page
+2023-05-29,2023-06-25,ROY,955,30,30.5,9.5,15,3,7,3,Wikipedia 2023 polling page
+2023-06-26,2023-07-23,ROY,937,33.5,26,9,14,5,6,4,Wikipedia 2023 polling page
+2023-07-31,2023-08-27,ROY,1046,31,24,12.5,18,5.5,4,2,Wikipedia 2023 polling page
+2023-09-04,2023-10-08,ROY,1250,30.5,26,15,11.5,7.5,3,3.5,Wikipedia 2023 polling page
+# Polls missing from the NZPolls YAML for the 2026 cycle, from the Wikipedia 2026 polling page (added 2 Nov 2026).
+2026-01-16,2026-01-26,TBM,1087,31,35,10,8,9,3,,Wikipedia 2026 polling page
+2025-04-28,2025-05-25,ROY,799,31.5,29,11.5,12,6.5,4.5,3,Wikipedia 2026 polling page
+2024-11-01,2024-11-10,TBM,,34,33,10,10,7,3.3,,Wikipedia 2026 polling page
+2024-05-01,2024-05-10,TBM,,35,32,,,,,,Wikipedia 2026 polling page (only NAT and LAB reported)

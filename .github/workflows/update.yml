@@ -1,0 +1,74 @@
+name: Update poll of polls
+
+on:
+  schedule:
+    # Twice a day: 7:17am and 7:17pm NZ daylight time (18:17 and 06:17 UTC).
+    - cron: "17 6,18 * * *"
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Refit the model even if no inputs changed"
+        type: boolean
+        default: false
+  push:
+    branches: [main]
+    paths: ["data/**", "pipeline/**", "site/**", ".github/workflows/**", "requirements.txt"]
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: update
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    env:
+      TZ: Pacific/Auckland          # so "today" is the NZ date
+      PYTHONUNBUFFERED: "1"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install
+        run: pip install -r requirements.txt
+
+      - name: Scrape polls and refit if anything changed
+        id: run
+        run: python pipeline/run_update.py ${{ inputs.force && '--force' || '' }}
+
+      - name: Commit new polls and site data
+        run: |
+          git config user.name "poll-of-polls-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/polls site/data
+          if git diff --cached --quiet; then
+            echo "Nothing to commit."
+          else
+            git commit -m "Update polls and site data ($(date +'%Y-%m-%d %H:%M %Z'))"
+            git pull --rebase
+            git push
+          fi
+
+      - uses: actions/configure-pages@v5
+        if: steps.run.outputs.updated == 'true' || github.event_name != 'schedule'
+
+      - uses: actions/upload-pages-artifact@v3
+        if: steps.run.outputs.updated == 'true' || github.event_name != 'schedule'
+        with:
+          path: site
+
+      - id: deploy
+        uses: actions/deploy-pages@v4
+        if: steps.run.outputs.updated == 'true' || github.event_name != 'schedule'

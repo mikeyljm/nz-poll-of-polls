@@ -1,0 +1,55 @@
+﻿Party and Electorate Candidate Votes Recorded at each voting place
+"East Coast Bays 11","Party Vote Details"
+,,"ACT New Zealand","Aotearoa Legalise Cannabis Party","Ban1080","Conservative","Democrats for Social Credit","Focus New Zealand","Green Party","Internet MANA","Labour Party","Māori Party","National Party","New Zealand First Party","NZ Independent Coalition","The Civilian Party","United Future","Total Valid Party Votes","Informal Party Votes"
+"Albany","Albany Community Hall, 3/21 Library Lane",15,3,2,27,0,0,51,5,49,0,352,27,0,0,0,531,0
+,"Albany Primary School, 6 Bass Road",23,4,3,51,0,0,68,5,132,3,742,53,0,2,3,1089,2
+,"Massey University, Building 82, Gate 4, Turitea Place (off Old Albany Highway)",8,2,0,12,0,0,18,1,47,1,198,9,0,0,1,297,1
+,"Oteha Valley School, Medallion Drive (off Oteha Valley Road)",87,1,1,113,1,0,110,14,237,5,1078,68,0,2,0,1717,2
+,"Pinehurst School,  75 Bush Road",19,3,0,66,0,0,60,9,139,5,778,51,0,0,1,1131,2
+"Browns Bay","Browns Bay Red Cross Centre, 5 Wilks Lane",18,10,4,57,1,0,85,7,146,6,732,93,0,0,5,1164,3
+,"Browns Bay School, 2- 4 Masterton Road",28,4,3,87,0,0,126,11,144,5,934,74,2,1,6,1425,0
+,"Crossroads Church, 5 Bayview Road  ",3,2,1,62,0,0,40,6,51,2,354,36,0,1,0,558,3
+,"Northcross Intermediate School, 10 Sartors Avenue",10,4,1,95,1,0,91,5,153,2,755,90,0,3,1,1211,4
+,"Pinehill School, Hugh Green Drive",70,4,1,85,0,0,114,10,206,3,1077,53,0,1,6,1630,1
+,"Progress Hall (under Bays Club),  6 Anzac Road",21,5,3,77,2,0,104,3,132,8,690,94,0,0,5,1144,2
+"Glenfield","Meadowood Community House, 55 Meadowood Drive (off Unsworth Drive)",2,1,0,3,0,1,1,0,8,0,47,7,0,0,0,70,0
+,"Westminster Christian School, 31 Westminster Gardens ",0,0,0,4,0,0,3,0,0,0,11,1,0,0,0,19,0
+"Greenhithe","Upper Harbour Primary School, 140 Kyle Road",7,0,0,13,0,0,16,2,29,0,203,4,0,0,0,274,0
+"Long Bay","Long Bay Baptist Church, 282 Glenvar Road",1,4,2,77,0,0,42,1,72,2,390,33,0,1,6,631,1
+,"Long Bay College, 20 Ashley Avenue",4,0,2,31,0,0,36,2,65,2,237,20,0,0,3,402,0
+"Mairangi Bay","Mairangi Bay Community Church Hall, 49 Maxwelton Drive",3,0,0,16,1,0,19,1,26,1,120,5,0,0,0,192,0
+,"Mairangi Bay Presbyterian Church Hall, 11 Hastings Road",1,1,0,12,0,0,28,1,37,0,254,16,0,0,0,350,0
+,"Rangitoto College, 564 East Coast Road",25,2,1,57,0,0,88,10,119,5,633,49,0,0,3,992,4
+"Milford","Milford School, 34 Shakespeare Road",3,1,0,2,0,0,5,0,2,0,27,1,0,0,0,41,0
+,"North Shore Hospital, Shakespeare Road",0,0,0,4,0,0,5,0,3,1,20,2,0,0,0,35,0
+"Murrays Bay","Murrays Bay Intermediate School, 37 Sunrise Avenue",12,1,0,40,2,1,80,4,110,1,551,35,0,1,0,838,1
+"Redvale","East Coast Bays Bible Baptist Church, 1092 East Coast Road",8,0,0,31,0,0,41,6,47,2,304,18,0,0,0,457,2
+"Sunnynook","Sunnynook School, 27 Lyford Crescent",2,0,0,3,0,0,7,0,7,0,35,7,0,0,0,61,0
+"Takapuna","Takapuna School, 23 Auburn Street (or Anzac Street entrance)",2,0,0,3,1,0,5,0,11,0,36,3,0,0,0,61,0
+"Torbay","Glamorgan School, 145 Glamorgan Drive",9,4,3,118,0,0,120,10,188,3,935,84,0,2,3,1479,0
+,"Torbay School, 60 Deep Creek Road",7,4,1,98,1,0,153,10,206,12,888,76,0,2,3,1461,4
+,"Torbay Senior Citizens Club, Torbay Shopping Centre, 37 Watea Road",6,4,2,105,1,0,180,7,214,5,825,135,0,1,2,1487,0
+,"Voting places where less than 6 votes were taken",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+,"Ordinary Votes BEFORE polling day",107,14,11,652,4,1,509,42,896,31,5339,593,0,0,14,8213,38
+,"Special Votes BEFORE polling day",12,2,2,55,0,0,94,11,115,4,507,46,2,1,0,851,1
+,"Special Votes On polling day",46,11,3,113,2,0,251,25,273,3,1285,145,0,2,5,2164,2
+,"Overseas Special Votes including Defence Force",7,3,0,11,0,0,115,8,56,1,298,9,0,0,1,509,0
+,"Votes Allowed for Party Only",14,1,1,30,0,0,47,6,85,12,260,27,0,0,1,484,0
+,"East Coast Bays Total",580,95,47,2210,17,3,2712,222,4005,125,20895,1964,4,20,69,32968,73
+,,,,,,,,,,,,,,,,"Valid Party Votes plus Informal Party Votes",33041
+"Electorate Party Valid Votes for East Coast Bays",,"National Party - .6337964086"
+"ACT New Zealand",580,.0175928173
+"Aotearoa Legalise Cannabis Party",95,.0028815821
+"Ban1080",47,.0014256248
+"Conservative",2210,.0670347003
+"Democrats for Social Credit",17,.0005156515
+"Focus New Zealand",3,.0000909973
+"Green Party",2712,.082261587
+"Internet MANA",222,.0067338025
+"Labour Party",4005,.1214814365
+"Māori Party",125,.0037915554
+"National Party",20895,.6337964086
+"New Zealand First Party",1964,.0595729192
+"NZ Independent Coalition",4,.0001213298
+"The Civilian Party",20,.0006066489
+"United Future",69,.0020929386

@@ -1,0 +1,72 @@
+{
+ "updated": "2026-11-07T02:19+00:00",
+ "as_of_week": "2026-11-07",
+ "model_end": "2026-11-07",
+ "last_poll": "2026-11-03",
+ "last_election": "2023-10-14",
+ "previous_election": "2020-10-17",
+ "last_election_status": "official",
+ "polls_this_cycle": 134,
+ "parties": {
+  "NAT": {
+   "name": "National",
+   "colour": "#00529F"
+  },
+  "LAB": {
+   "name": "Labour",
+   "colour": "#D82A20"
+  },
+  "GRN": {
+   "name": "Green",
+   "colour": "#098137"
+  },
+  "ACT": {
+   "name": "ACT",
+   "colour": "#FDE401"
+  },
+  "NZF": {
+   "name": "NZ First",
+   "colour": "#3F3F3F"
+  },
+  "TPM": {
+   "name": "Te Pāti Māori",
+   "colour": "#B2001A"
+  },
+  "OPP": {
+   "name": "Opportunity",
+   "colour": "#4E8F9E"
+  },
+  "OTH": {
+   "name": "Other",
+   "colour": "#A0A0A0"
+  }
+ },
+ "pollsters": {
+  "COL": "1News–Verian",
+  "CUR": "Taxpayers' Union–Curia",
+  "REI": "RNZ–Reid Research",
+  "ROY": "Roy Morgan",
+  "TBM": "Talbot Mills",
+  "FWS": "The Post–Freshwater Strategy",
+  "ANA": "Anacta",
+  "BAU": "Bauer Media",
+  "DYN": "Dynata",
+  "ESS": "Essential",
+  "GUA": "Guardian Essential",
+  "HOR": "Horizon",
+  "YGV": "YouGov",
+  "IPS": "Ipsos",
+  "DGI": "DigiPoll"
+ },
+ "diagnostics": {
+  "max_rhat": 1.031,
+  "min_ess_bulk": 75,
+  "draws": 600,
+  "sampler": "nutpie"
+ },
+ "input_hash": "0df40e5e1235d1e7",
+ "iso_week": [
+  2026,
+  45
+ ]
+}
