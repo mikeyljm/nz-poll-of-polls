@@ -83,22 +83,23 @@
     el.innerHTML = "";
     const hasD = order.every((p) => cur[p].density);
     const W = Math.max(320, el.clientWidth || 760), small = W < 560;
-    const rowH = small ? 80 : 98, m = { t: 44, r: small ? 10 : 24, b: 6, l: small ? 30 : 30 };
+    const rowH = small ? 80 : 98, m = { t: 22, r: small ? 10 : 24, b: 74, l: 30 };
     const Hh = m.t + m.b + order.length * rowH;
-    const xmax = Math.ceil(d3.max(order, (p) => hasD ? cur[p].density.x0 + cur[p].density.dx * (cur[p].density.y.length - 1) : cur[p].hi) / 5) * 5;
+    const xmax = Math.ceil((d3.max(order, (p) => hasD ? cur[p].density.x0 + cur[p].density.dx * (cur[p].density.y.length - 1) : cur[p].hi) + 1) / 5) * 5;
     const x = d3.scaleLinear().domain([0, xmax]).range([m.l, W - m.r]);
     const svg = d3.select(el).append("svg").attr("viewBox", `0 0 ${W} ${Hh}`).attr("role", "img")
       .attr("aria-label", "Distribution of each party's estimated vote: " + order.map((p) => `${name(p)} ${fmt1(cur[p].median)}% (90% interval ${fmt1(cur[p].lo)} to ${fmt1(cur[p].hi)})`).join("; "));
-    svg.append("text").attr("x", W - m.r).attr("y", 12).attr("text-anchor", "end").attr("font-size", 13).attr("fill", "var(--ink-2)").text("Party vote %");
-    svg.append("g").attr("class", "axis").attr("transform", `translate(0,${m.t - 10})`)
-      .call(d3.axisTop(x).ticks(small ? 4 : 7).tickSize(6).tickFormat((d) => d))
+    const axisY = Hh - m.b + 28;
+    svg.append("text").attr("x", (m.l + W - m.r) / 2).attr("y", axisY + 40).attr("text-anchor", "middle").attr("font-size", 13).attr("fill", "var(--ink-2)").text("Party vote %");
+    svg.append("g").attr("class", "axis").attr("transform", `translate(0,${axisY})`)
+      .call(d3.axisBottom(x).ticks(small ? 4 : 7).tickSize(6).tickFormat((d) => d))
       .call((g) => g.select(".domain").attr("stroke", "var(--ink)").attr("stroke-width", 1.5))
       .call((g) => g.selectAll(".tick line").attr("stroke", "var(--ink)"))
       .call((g) => g.selectAll("text").attr("font-size", 13).attr("fill", "var(--ink-2)"));
     // 5% threshold through every row
-    svg.append("line").attr("x1", x(5)).attr("x2", x(5)).attr("y1", m.t - 10).attr("y2", Hh - m.b)
+    svg.append("line").attr("x1", x(5)).attr("x2", x(5)).attr("y1", m.t - 6).attr("y2", axisY)
       .attr("stroke", "var(--muted)").attr("stroke-dasharray", "2 4");
-    svg.append("text").attr("x", x(5) + 4).attr("y", m.t + 6).attr("font-size", 11).attr("fill", "var(--muted)").text("5% threshold");
+    svg.append("text").attr("x", x(5) + 4).attr("y", m.t + 2).attr("font-size", 11).attr("fill", "var(--muted)").text("5% threshold");
     const peak = rowH - 40;
     order.forEach((p, i) => {
       const c = cur[p], base = m.t + i * rowH + rowH - 18, col = colour(p);
