@@ -55,9 +55,10 @@
 
   // ------------------------------------------------------------------ header
   const updated = new Date(meta.updated);
+  const nzTime = updated.toLocaleString("en-NZ", { dateStyle: "long", timeStyle: "short", timeZone: "Pacific/Auckland" });
+  const np = meta.polls_this_cycle;
   $("#updated").textContent =
-    `Updated ${updated.toLocaleString("en-NZ", { dateStyle: "medium", timeStyle: "short", timeZone: "Pacific/Auckland" })} · ` +
-    `latest poll ended ${dateFmt(parseDate(meta.last_poll))} · ${meta.polls_this_cycle} poll${meta.polls_this_cycle === 1 ? "" : "s"} since the ${meta.last_election.slice(0, 4)} election`;
+    `Updated ${nzTime}. ${np ? `${np} poll${np === 1 ? "" : "s"} since the ${meta.last_election.slice(0, 4)} election, the latest ending ${dateFmt(parseDate(meta.last_poll))}.` : `No polls since the ${meta.last_election.slice(0, 4)} election yet.`}`;
 
   const eYear = meta.last_election.slice(0, 4);
   const banner = [];
@@ -74,16 +75,20 @@
   const cur = P.current;
   const order = MAIN.slice().sort((a, b) => cur[b].median - cur[a].median);
   $("#vote-sub").textContent =
-    `Estimated party vote for the week of ${dateFmt(parseDate(meta.as_of_week))}, with 90% intervals. Change is since the ${eYear} election.`;
-  $("#tiles").innerHTML = order
-    .map((p) => {
+    `Estimated support for the week of ${dateFmt(parseDate(meta.as_of_week))}, with change since the ${eYear} election.`;
+  (function voteList() {
+    const xmax = Math.ceil(d3.max(order, (p) => cur[p].hi) / 10) * 10;
+    const xp = (v) => `${(v / xmax) * 100}%`;
+    $("#tiles").innerHTML = order.map((p) => {
       const c = cur[p];
-      return `<div class="tile"><div class="name">${sw(p)}${name(p)}</div>
-        <div class="val">${fmt1(c.median)}<small>%</small></div>
-        <div class="int">${fmt1(c.lo)}–${fmt1(c.hi)}%</div>
-        ${c.since_election != null ? `<div class="delta">${signed(c.since_election)} since ${eYear}</div>` : ""}</div>`;
-    })
-    .join("");
+      return `<div class="vrow"><div class="pname">${sw(p)}${name(p)}</div>
+        <div class="track" aria-hidden="true"><span class="thr" style="left:${xp(5)}"></span>
+          <span class="band" style="left:${xp(c.lo)};width:calc(${xp(c.hi)} - ${xp(c.lo)});background:${colour(p)}"></span>
+          <span class="mid" style="left:${xp(c.median)};background:${colour(p)}"></span></div>
+        <div class="pv">${fmt1(c.median)}%</div>
+        <div class="pi">${fmt1(c.lo)}–${fmt1(c.hi)}${c.since_election != null ? `<br>${signed(c.since_election)} since ${eYear}` : ""}</div></div>`;
+    }).join("") + `<p class="note" style="margin-top:8px">Bars show the 90% interval; the dashed line is the 5% threshold.</p>`;
+  })();
 
   // ------------------------------------------------------------------ trend chart
   const weeks = P.weeks.map(parseDate);
@@ -190,12 +195,64 @@
   const S = SEATS;
   const blocName = (ps) => ps.map(name).join(" + ");
   $("#seats-sub").textContent =
-    `From ${d3.format(",")(meta.diagnostics?.draws || 5000)} simulated elections at this week's estimate. A majority is 61 of 120 seats, or more if there's an overhang.${S.meta.total_seats.p_overhang > 0.05 ? ` Parliament has an overhang in ${Math.round(S.meta.total_seats.p_overhang * 100)}% of simulations (median ${S.meta.total_seats.median} seats), mostly from electorates won beyond a party's share of the party vote.` : ""}`;
+    `From ${d3.format(",")(meta.diagnostics?.draws || 5000)} simulated elections at this week's estimate. A majority is 61 of 120 seats, or more if there's an overhang.${S.meta.total_seats.p_overhang > 0.05 && S.meta.total_seats.p_overhang <= 0.5 ? ` Parliament has an overhang in ${Math.round(S.meta.total_seats.p_overhang * 100)}% of simulations.` : ""}`;
   if (S.meta.total_seats.p_overhang > 0.5 && S.seats.NAT && S.seats.NAT.median > 0) {
     const nE = ELEC_PRE?.sim_counts?.recent?.NAT?.median;
     $("#overhang-note").innerHTML = `<b>Why Parliament has more than 120 seats.</b> National and Labour are close on the party vote, but National is projected to win${nE ? ` about ${nE}` : " more"} of the 64 general electorates, partly because most ACT and NZ First voters give their electorate vote to the National candidate. When a party wins more electorates than its party vote entitles it to, it keeps them and Parliament grows (an overhang), which raises the bar for a majority. No major party has had an overhang before, and this depends on candidates and vote-splitting staying as they were; see <a href="#electorates">Electorates</a>.`;
     $("#overhang-note").hidden = false;
   }
+  // ------------------------------------------------------------------ hero: answer + the House
+  (function hero() {
+    const H0 = S.headline, b = S.meta.blocs;
+    const pc = (v) => (v > 0 && v < 0.01 ? "under 1%" : v > 0.99 && v < 1 ? "over 99%" : `${Math.round(v * 100)}%`);
+    const list = (ps) => { const n = ps.map(name); return n.length > 1 ? n.slice(0, -1).join(", ") + " and " + n[n.length - 1] : n[0]; };
+    const R = list(b.right), Lb = list(b.left), K = name(b.kingmaker);
+    const vals = Object.values(H0);   // right alone, left alone, kingmaker decides, neither
+    $("#answer").textContent = `${R} win a majority on their own in ${pc(vals[0])} of simulations. ` +
+      (vals[1] >= 0.05 ? `${Lb} do in ${pc(vals[1])}. ` : "") +
+      `In ${pc(vals[2])}, neither side does and ${K} holds the balance.`;
+
+    const ORDER = ["TPM", "GRN", "LAB", "OPP", "NAT", "ACT", "NZF"];
+    const seatsBy = ORDER.filter((p) => S.seats[p]).map((p) => ({ p, n: S.seats[p].median }));
+    const N = d3.sum(seatsBy, (d) => d.n);
+    const el = $("#house-chart");
+    const W = 640, Hh = 340, cx = W / 2, cy = Hh - 24, R1 = 300, R0 = 118;
+    const rows = Math.max(6, Math.round(Math.sqrt(N / 2.2)));
+    const radii = d3.range(rows).map((i) => R0 + (i * (R1 - R0)) / (rows - 1));
+    let per = radii.map((r) => Math.round((N * r) / d3.sum(radii)));
+    let diff = N - d3.sum(per);
+    for (let i = rows - 1; diff !== 0; i = (i - 1 + rows) % rows) { per[i] += Math.sign(diff); diff -= Math.sign(diff); }
+    const pos = [];
+    radii.forEach((r, i) => {
+      for (let j = 0; j < per[i]; j++) {
+        const th = Math.PI - (per[i] === 1 ? Math.PI / 2 : (j * Math.PI) / (per[i] - 1));
+        pos.push({ th, r, x: cx + r * Math.cos(th), y: cy - r * Math.sin(th) });
+      }
+    });
+    pos.sort((a, b) => b.th - a.th || a.r - b.r);
+    let k = 0;
+    seatsBy.forEach((d) => { for (let i = 0; i < d.n; i++) pos[k++].p = d.p; });
+    const dotR = Math.min(10, (Math.PI * R1) / per[rows - 1] / 2.3);
+    const svg = d3.select(el).append("svg").attr("viewBox", `0 0 ${W} ${Hh}`).attr("role", "img")
+      .attr("aria-label", `Projected House of ${N} seats: ` + seatsBy.map((d) => `${name(d.p)} ${d.n}`).join(", "));
+    svg.selectAll("circle").data(pos).join("circle").attr("cx", (d) => d.x).attr("cy", (d) => d.y)
+      .attr("r", dotR).attr("fill", (d) => colour(d.p))
+      .on("pointermove", (ev, d) => showTip(`<div class="t-head">${sw(d.p)} ${name(d.p)}</div>${S.seats[d.p].median} seats (90% interval ${S.seats[d.p].lo}–${S.seats[d.p].hi})`, ev))
+      .on("pointerleave", hideTip);
+    const maj = Math.floor(N / 2) + 1;
+    svg.append("line").attr("x1", cx).attr("x2", cx).attr("y1", cy - R1 - 16).attr("y2", cy + 4)
+      .attr("stroke", "var(--ink)").attr("stroke-width", 1.5).attr("stroke-dasharray", "3 3");
+    svg.append("text").attr("x", cx).attr("y", cy - R1 - 22).attr("text-anchor", "middle").attr("font-size", 14)
+      .attr("font-weight", 700).attr("fill", "var(--ink)").text(`${maj} for a majority`);
+    svg.append("text").attr("x", cx).attr("y", cy + 2).attr("text-anchor", "middle").attr("font-size", 40)
+      .attr("font-weight", 800).attr("fill", "var(--ink)").attr("letter-spacing", "-0.02em").text(N);
+    svg.append("text").attr("x", cx).attr("y", cy + 20).attr("text-anchor", "middle").attr("font-size", 13)
+      .attr("fill", "var(--muted)").text("seats");
+    const over = N - 120;
+    $("#house-cap").innerHTML = `<div class="legend">${seatsBy.map((d) => `<span>${sw(d.p)}${name(d.p)} <b>${d.n}</b></span>`).join("")}</div>` +
+      `Median seats in each party's simulations, left to right by bloc.${over > 0 ? ` The House is ${N} seats because of a ${over}-seat overhang.` : ""}`;
+  })();
+
   const H = S.headline;
   const hRows = Object.entries(H).map(([k, v]) => {
     const label = k.replace("Right bloc", blocName(S.meta.blocs.right)).replace("Left bloc", blocName(S.meta.blocs.left))
@@ -204,7 +261,7 @@
   });
   $("#headline").innerHTML = hRows.join("");
   $("#coalitions").innerHTML = S.coalitions.map((c) =>
-    `<div class="prob-row"><div><div class="who">${c.parties.map(sw).join("")}<span>&nbsp;${c.name}</span></div><div class="detail">median ${c.median} seats (${c.lo}–${c.hi})</div></div>
+    `<div class="prob-row"><div><div class="who">${c.parties.map(sw).join("")} ${c.name}</div><div class="detail">median ${c.median} seats (${c.lo}–${c.hi})</div></div>
      <div class="bar"><i style="width:${c.p_majority * 100}%"></i></div><div class="pct">${c.p_majority < 0.005 && c.p_majority > 0 ? "<1" : Math.round(c.p_majority * 100)}%</div></div>`).join("");
 
   (function seatBars() {
@@ -248,7 +305,7 @@
       keyRows.map(([e, pr]) => `<tr><td>${e}</td><td class="l">${pRow(pr)}</td></tr>`).join("")}</tbody></table></div>` : ""}
     <p>Māori electorates (stated assumptions, at each party's current median vote):</p>
     <div class="table-wrap"><table class="data"><thead><tr><th class="l">Electorate</th><th class="l">Assumed chance of winning</th></tr></thead><tbody>${
-      Object.entries(A.maori).map(([e, pr]) => `<tr><td>${e}</td><td class="l">${pRow(pr)}</td></tr>`).join("")}</tbody></table></div>`;
+      Object.entries(A.maori || A.probabilities || {}).map(([e, pr]) => `<tr><td>${e}</td><td class="l">${pRow(pr)}</td></tr>`).join("")}</tbody></table></div>`;
 
   // ------------------------------------------------------------------ house effects
   (function house() {
@@ -426,6 +483,8 @@
         return { ...s, r, pw, fav: fav[0], pfav: fav[1] };
       });
       rows.sort((a, b) => (prob ? a.pfav - b.pfav : a.r.margin - b.r.margin));
+      const total = rows.length;
+      if (!showAllSeats && !q) rows = rows.slice(0, 20);
       const cell = (r, p) => {
         const qv = r.cand_q?.[p];
         return qv ? `<td>${fmt1(qv[1])}<span class="q">${Math.round(qv[0])}–${Math.round(qv[2])}</span></td>` : `<td>${pct(r.candidate[p])}</td>`;
@@ -441,8 +500,10 @@
         }).join("")
       }</tbody></table><p class="note">${prob
         ? "Sorted from most to least uncertain. The bar splits each seat's chances by party. Candidate votes are medians with 90% intervals. Hover a row to see the assumed candidates."
-        : "Sorted from closest to safest. Hover a row to see the assumed candidates."}</p>`;
+        : "Sorted from closest to safest. Hover a row to see the assumed candidates."}</p>${rows.length < total ? `<button class="more" id="more-seats">Show all ${total} electorates</button>` : ""}`;
+      $("#more-seats")?.addEventListener("click", () => { showAllSeats = true; draw(); });
     };
+    let showAllSeats = false;
     $("#elec-method").addEventListener("change", draw);
     $("#elec-search").addEventListener("input", draw);
     draw();

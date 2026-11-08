@@ -6,28 +6,38 @@
 <title>Poll of polls · Kōrero and Complexity</title>
 <meta name="description" content="A Bayesian average of New Zealand party-vote polls, seat and coalition probabilities, and how every voting place leans, updated automatically.">
 <link rel="stylesheet" href="assets/vendor/leaflet.css">
+<link rel="preload" href="assets/fonts/schibsted-grotesk-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
-<header class="site-header">
-  <div class="wrap">
-    <p class="kicker"><a href="https://mikeyljmiller.substack.com">Kōrero and Complexity</a></p>
-    <h1>New Zealand poll of polls</h1>
-    <p class="lede">Party vote, seats and coalitions from every published poll, and how each voting place leans compared with the country.</p>
-    <p class="updated" id="updated">Loading…</p>
+<header class="masthead">
+  <div class="wrap mast">
+    <a class="brand" href="https://mikeyljmiller.substack.com">Kōrero and Complexity</a>
     <nav class="toc" aria-label="Sections">
-      <a href="#vote">Party vote</a><a href="#seats">Seats</a><a href="#pollsters">Pollsters</a><a href="#polls">Polls</a><a href="#places">Voting places</a><a href="#electorates">Electorates</a><a href="#method">Method</a>
+      <a href="#vote">Party vote</a><a href="#seats">Seats</a><a href="#electorates">Electorates</a><a href="#places">Voting places</a><a href="#pollsters">Pollsters</a><a href="#polls">Polls</a><a href="#method">Method</a>
     </nav>
   </div>
 </header>
 
 <main class="wrap">
+  <section class="hero" aria-labelledby="title">
+    <div class="hero-text">
+      <h1 id="title">New Zealand poll of polls</h1>
+      <p class="answer" id="answer">Loading the latest estimate.</p>
+      <p class="updated" id="updated"></p>
+    </div>
+    <figure class="house">
+      <div id="house-chart" class="chart"></div>
+      <figcaption id="house-cap"></figcaption>
+    </figure>
+  </section>
+
   <div id="banner" class="banner" hidden></div>
 
   <section id="vote">
     <h2>Party vote</h2>
     <p class="sub" id="vote-sub"></p>
-    <div class="tiles" id="tiles"></div>
+    <div class="vote-list" id="tiles"></div>
     <div class="chart-head">
       <h3>Trend</h3>
       <div class="seg" role="group" aria-label="Time range" id="range">
@@ -61,21 +71,28 @@
       <div>
         <h3>Seats by party</h3>
         <div class="chart" id="seatbars"></div>
-        <p class="note">Bar: median seats. Whisker: 90% interval. Electorate outcomes for ACT, Te Pāti Māori and others are assumptions; see <a href="#method">Method</a>.</p>
+        <p class="note">Bar: median seats. Whisker: 90% interval. General electorates come from the electorate model in each simulation; Māori electorates are assumptions. See <a href="#method">Method</a>.</p>
       </div>
     </div>
   </section>
 
-  <section id="pollsters">
-    <h2>Pollster house effects</h2>
-    <p class="sub">How far each pollster's results sit from the model's estimate for each party, in percentage points, judged against past election results. Positive means the pollster tends to show that party higher.</p>
-    <div class="table-wrap" id="house"></div>
-  </section>
 
-  <section id="polls">
-    <h2>Polls</h2>
-    <p class="sub" id="polls-sub"></p>
-    <div class="table-wrap" id="polltable"></div>
+
+
+
+  <section id="electorates">
+    <h2>Electorates</h2>
+    <p class="sub" id="elec-sub"></p>
+    <div class="tiles small" id="elec-counts"></div>
+    <div class="controls">
+      <label>Method <select id="elec-method">
+        <option value="recent">Recent lean (central)</option>
+        <option value="mean">Average lean since 2002</option>
+        <option value="trend">Trend lean</option>
+      </select></label>
+      <label>Search <input type="search" id="elec-search" placeholder="Electorate"></label>
+    </div>
+    <div class="table-wrap" id="electable"></div>
   </section>
 
   <section id="places">
@@ -97,19 +114,16 @@
     <div class="legend" id="map-legend"></div>
   </section>
 
-  <section id="electorates">
-    <h2>Electorates</h2>
-    <p class="sub" id="elec-sub"></p>
-    <div class="tiles small" id="elec-counts"></div>
-    <div class="controls">
-      <label>Method <select id="elec-method">
-        <option value="recent">Recent lean (central)</option>
-        <option value="mean">Average lean since 2002</option>
-        <option value="trend">Trend lean</option>
-      </select></label>
-      <label>Search <input type="search" id="elec-search" placeholder="Electorate"></label>
-    </div>
-    <div class="table-wrap" id="electable"></div>
+  <section id="pollsters">
+    <h2>Pollster house effects</h2>
+    <p class="sub">How far each pollster's results sit from the model's estimate for each party, in percentage points, judged against past election results. Positive means the pollster tends to show that party higher.</p>
+    <div class="table-wrap" id="house"></div>
+  </section>
+
+  <section id="polls">
+    <h2>Polls</h2>
+    <p class="sub" id="polls-sub"></p>
+    <div class="table-wrap" id="polltable"></div>
   </section>
 
   <section id="method" class="prose">
