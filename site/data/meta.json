@@ -1,7 +1,7 @@
 {
- "updated": "2026-11-08T07:40+00:00",
+ "updated": "2026-11-08T13:25+00:00",
  "as_of_week": "2026-11-07",
- "model_end": "2026-11-08",
+ "model_end": "2026-11-09",
  "last_poll": "2026-11-03",
  "last_election": "2023-10-14",
  "previous_election": "2020-10-17",
@@ -67,6 +67,6 @@
  "input_hash": "92e4dd7c4b32499a",
  "iso_week": [
   2026,
-  45
+  46
  ]
 }
