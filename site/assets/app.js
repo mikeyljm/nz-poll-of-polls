@@ -188,7 +188,7 @@
   const S = SEATS;
   const blocName = (ps) => ps.map(name).join(" + ");
   $("#seats-sub").textContent =
-    `From ${d3.format(",")(meta.diagnostics?.draws || 4000)} simulated elections at this week's estimate. A majority is 61 of 120 seats, or more if there's an overhang.`;
+    `From ${d3.format(",")(meta.diagnostics?.draws || 5000)} simulated elections at this week's estimate. A majority is 61 of 120 seats, or more if there's an overhang.`;
   const H = S.headline;
   const hRows = Object.entries(H).map(([k, v]) => {
     const label = k.replace("Right bloc", blocName(S.meta.blocs.right)).replace("Left bloc", blocName(S.meta.blocs.left))

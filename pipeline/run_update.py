@@ -95,7 +95,7 @@ def main(argv=None) -> int:
     except ImportError:
         sampler = "pymc"
     mdl = M.build_model(d)
-    kw = dict(draws=300, tune=400, chains=2) if a.quick else dict(draws=1000, tune=1500, chains=4)
+    kw = dict(draws=300, tune=400, chains=2) if a.quick else dict(draws=1250, tune=1500, chains=4)   # 5,000 posterior draws
     idata = M.fit(mdl, nuts_sampler=sampler, progressbar=False, **kw)
 
     summ = az.summary(idata, var_names=["sigma_rw", "tau_house", "tau_drift", "tau_industry",

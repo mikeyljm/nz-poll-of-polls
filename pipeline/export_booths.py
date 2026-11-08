@@ -125,7 +125,7 @@ def load_calibration(P, C, CT):
     return out["methods"]
 
 
-def national_draws(n_max=4000):
+def national_draws(n_max=5000):
     """Poll-of-polls posterior draws of the national vote, in the electorate model's names (%)."""
     f = ROOT / "build" / "polls" / "current_draws.csv"
     if not f.exists():
