@@ -190,6 +190,8 @@ def main(zpath=GEO / "nz_localities.zip", overrides=ROOT / "data" / "booths" / "
     Sm.to_csv(OUT / "seat_counts.csv", index=False)
     print(Sm.to_string(index=False))
     print(placed.placed_by.value_counts())
+    main.context = {"W": W, "L": L, "adj": adj, "models": models, "pers": pers,
+                    "target": target, "base": base}
     return R, Sm, placed, base
 
 

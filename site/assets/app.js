@@ -389,26 +389,58 @@
 
   // ------------------------------------------------------------------ electorates
   (function electorates() {
-    const sc = ELEC.scenario;
-    $("#elec-sub").innerHTML = `Projected winners in the 64 general electorates (2026 boundaries), if each voting place keeps its lean and the national vote is today's poll-of-polls median: ${
-      ["NAT", "LAB", "GRN", "ACT", "NZF", "OPP"].map((p) => `${name(p)} ${fmt1(sc[p])}%`).join(", ")}. Candidates are assumed to be those who stood in ${ELEC.base_year}. Māori electorates aren't modelled here.`;
+    const sc = ELEC.scenario, prob = ELEC.n_draws > 0;
+    const EP = ["NAT", "LAB", "GRN", "ACT", "NZF", "OPP"];
+    $("#elec-sub").innerHTML = prob
+      ? `Chances in the 64 general electorates (2026 boundaries), from ${d3.format(",")(ELEC.n_draws)} simulations. Each one takes a draw of the national vote from the poll of polls, applies every voting place's lean, models the candidate vote, and adds the local error the model has made in past elections. Candidates are assumed to be those who stood in ${ELEC.base_year}. Māori electorates aren't modelled here.`
+      : `Projected winners in the 64 general electorates (2026 boundaries) at today's poll-of-polls median: ${["NAT", "LAB", "GRN", "ACT", "NZF", "OPP"].map((p) => `${name(p)} ${fmt1(sc[p])}%`).join(", ")}. Candidates are assumed to be those who stood in ${ELEC.base_year}. Māori electorates aren't modelled here.`;
+    const rating = (p) => (p >= 0.95 ? "Safe" : p >= 0.75 ? "Likely" : p >= 0.6 ? "Leans" : "Toss-up");
+    const tidy = (n) => { if (!n) return "–"; const [s2, g] = n.split(","); if (!g) return n; const first = g.trim().split(" ")[0]; return `${first} ${s2.charAt(0) + s2.slice(1).toLowerCase()}`; };
+    const pbar = (pw) => `<span class="pbar" aria-hidden="true">${EP.filter((p) => pw[p] > 0).map((p) => `<i style="width:${pw[p] * 100}%;background:${colour(p)}"></i>`).join("")}</span>`;
     const draw = () => {
       const m = $("#elec-method").value, q = $("#elec-search").value.trim().toLowerCase();
-      const cnt = ELEC.counts[m];
-      $("#elec-counts").innerHTML = Object.entries(cnt).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1])
-        .map(([p, v]) => `<div class="tile"><div class="name">${sw(p)}${name(p)}</div><div class="val">${v}</div></div>`).join("");
-      const rows = ELEC.seats.filter((s) => !q || s.seat.toLowerCase().includes(q)).map((s) => ({ ...s, r: s[m] }))
-        .sort((a, b) => a.r.margin - b.r.margin);
-      $("#electable").innerHTML = `<table class="data"><thead><tr><th class="l">Electorate</th><th class="l">Projected winner</th><th>Margin</th>${
-        ["NAT", "LAB", "GRN", "ACT"].map((p) => `<th>${sw(p)} ${name(p)} cand.</th>`).join("")}<th>National party vote</th><th>Labour party vote</th></tr></thead><tbody>${
-        rows.map((s) => `<tr title="Assumed candidates: ${tidy(s.assumed.NAT)} (National), ${tidy(s.assumed.LAB)} (Labour)"><td>${s.seat}</td><td class="l">${sw(s.r.winner)} ${name(s.r.winner)}${s.r.margin < 3 ? ' <span class="muted">(close)</span>' : ""}</td><td>${fmt1(s.r.margin)}</td>${
-          ["NAT", "LAB", "GRN", "ACT"].map((p) => `<td>${pct(s.r.candidate[p])}</td>`).join("")}<td>${pct(s.r.party.NAT)}</td><td>${pct(s.r.party.LAB)}</td></tr>`).join("")
-      }</tbody></table><p class="note">Sorted from closest to safest. "Close" means a margin under 3 points on the candidate vote. Hover a row to see the assumed candidates.</p>`;
+      if (prob) {
+        const sc2 = ELEC.sim_counts[m];
+        $("#elec-counts").innerHTML = Object.entries(sc2).filter(([, v]) => v.hi > 0).sort((a, b) => b[1].median - a[1].median)
+          .map(([p, v]) => `<div class="tile"><div class="name">${sw(p)}${name(p)}</div><div class="val">${v.median}</div><div class="int">${v.lo}–${v.hi} seats</div></div>`).join("");
+      } else {
+        $("#elec-counts").innerHTML = Object.entries(ELEC.counts[m]).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1])
+          .map(([p, v]) => `<div class="tile"><div class="name">${sw(p)}${name(p)}</div><div class="val">${v}</div></div>`).join("");
+      }
+      let rows = ELEC.seats.filter((s) => !q || s.seat.toLowerCase().includes(q)).map((s) => {
+        const r = s[m];
+        const pw = r.p_win || { [r.winner]: 1 };
+        const fav = Object.entries(pw).sort((a, b) => b[1] - a[1])[0];
+        return { ...s, r, pw, fav: fav[0], pfav: fav[1] };
+      });
+      rows.sort((a, b) => (prob ? a.pfav - b.pfav : a.r.margin - b.r.margin));
+      const cell = (r, p) => {
+        const qv = r.cand_q?.[p];
+        return qv ? `<td>${fmt1(qv[1])}<span class="q">${Math.round(qv[0])}–${Math.round(qv[2])}</span></td>` : `<td>${pct(r.candidate[p])}</td>`;
+      };
+      $("#electable").innerHTML = `<table class="data"><thead><tr><th class="l">Electorate</th><th class="l">Favourite</th>${prob ? '<th class="l">Chance of winning</th>' : "<th>Margin</th>"}${
+        ["NAT", "LAB", "GRN", "ACT"].map((p) => `<th>${sw(p)} ${name(p)} candidate</th>`).join("")}</tr></thead><tbody>${
+        rows.map((s) => {
+          const tipTxt = EP.filter((p) => s.pw[p] >= 0.005).map((p) => `${name(p)} ${Math.round(s.pw[p] * 100)}%`).join(", ");
+          return `<tr title="Assumed candidates: ${tidy(s.assumed.NAT)} (National), ${tidy(s.assumed.LAB)} (Labour)"><td>${s.seat}</td>
+          <td class="l">${sw(s.fav)} ${name(s.fav)}${prob ? ` <span class="muted">${rating(s.pfav)}</span>` : ""}</td>
+          ${prob ? `<td class="l"><span class="chance">${pbar(s.pw)}<b>${s.pfav > 0.995 ? ">99" : Math.round(s.pfav * 100)}%</b></span><span class="sr">${tipTxt}</span></td>` : `<td>${fmt1(s.r.margin)}</td>`}
+          ${["NAT", "LAB", "GRN", "ACT"].map((p) => cell(s.r, p)).join("")}</tr>`;
+        }).join("")
+      }</tbody></table><p class="note">${prob
+        ? "Sorted from most to least uncertain. The bar splits each seat's chances by party. Candidate votes are medians with 90% intervals. Hover a row to see the assumed candidates."
+        : "Sorted from closest to safest. Hover a row to see the assumed candidates."}</p>`;
     };
-    const tidy = (n) => { if (!n) return "–"; const [s, g] = n.split(","); if (!g) return n; const first = g.trim().split(" ")[0]; return `${first} ${s.charAt(0) + s.slice(1).toLowerCase()}`; };
     $("#elec-method").addEventListener("change", draw);
     $("#elec-search").addEventListener("input", draw);
     draw();
+
+    // method text: backtest
+    if (ELEC.backtest?.recent) {
+      const bt = ELEC.backtest.recent.map((b) => `${b.correct} of ${b.of} in ${b.year}`).join(", ");
+      const le = ELEC.local_error.recent;
+      $("#elec-method-note").innerHTML = `Given the actual national result, the electorate model (recent lean) picked the winner in ${bt}. In those backtests a major party's candidate vote was off by about ${fmt1(le.seat_sd[0])} points (National) and ${fmt1(le.seat_sd[1])} points (Labour) in a typical seat, plus a shared miss of about ${fmt1(le.year_sd[0])}–${fmt1(le.year_sd[1])} points that moved every seat the same way that year. The simulations add errors of that size. Checked year by year on elections they weren't calibrated on, favourites won about as often as their probabilities said, though seats rated near-certain were upset slightly more often than predicted (4 of 139).`;
+    }
   })();
 
   // redraw trend on resize

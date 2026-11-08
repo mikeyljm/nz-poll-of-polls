@@ -100,3 +100,8 @@ table.data tbody tr:hover { background: var(--surface-2); }
 @media (prefers-color-scheme: dark) { .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(.85) contrast(.9); } }
 .more { font: inherit; font-size: 14px; padding: 6px 12px; border: 1px solid var(--rule); border-radius: 6px; background: var(--surface); color: var(--ink); cursor: pointer; margin-top: 10px; }
 .prob-row .who span { white-space: normal; }
+.chance { display: inline-flex; align-items: center; gap: 8px; }
+.pbar { display: inline-flex; width: 90px; height: 8px; border-radius: 4px; overflow: hidden; background: var(--grid); gap: 1px; }
+.pbar i { display: block; height: 100%; }
+td .q { display: block; font-size: 11px; color: var(--muted); }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }

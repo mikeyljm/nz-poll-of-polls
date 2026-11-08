@@ -25,6 +25,9 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "pipeline" / "booths"))
 import nz_model as NM          # noqa: E402
 import predict_nz as PR        # noqa: E402
+import local_error as LE       # noqa: E402
+import simulate as SIM         # noqa: E402
+import hashlib                 # noqa: E402
 
 SITE = ROOT / "site" / "data"
 CODE = {"National": "NAT", "Labour": "LAB", "Green": "GRN", "ACT": "ACT",
@@ -106,13 +109,43 @@ def export_localities(P, seats, locs, base):
     return len(out)
 
 
-def export_projection(R, Sm, base, nat):
-    seats = []
+def load_calibration(P, C, CT):
+    """Local-error calibration from the backtests, cached by a hash of the booth data."""
+    cache = ROOT / "data" / "booths" / "local_error.json"
+    h = hashlib.sha256(pd.util.hash_pandas_object(P[["year", "electorate", "loc", "total_valid"]]).values.tobytes()
+                       + pd.util.hash_pandas_object(CT[["year", "electorate", "party", "votes"]]).values.tobytes()
+                       ).hexdigest()[:16]
+    if cache.exists():
+        c = json.loads(cache.read_text())
+        if c.get("data_hash") == h:
+            return c["methods"]
+    print("Calibrating local error from backtests (about a minute)...")
+    out = {"data_hash": h, "methods": {m: LE.calibrate(P, C, CT, m) for m in ("recent", "mean", "trend")}}
+    cache.write_text(json.dumps(out, indent=1))
+    return out["methods"]
+
+
+def national_draws(n_max=4000):
+    """Poll-of-polls posterior draws of the national vote, in the electorate model's names (%)."""
+    f = ROOT / "build" / "polls" / "current_draws.csv"
+    if not f.exists():
+        return None
+    d = pd.read_csv(f)
+    if len(d) > n_max:
+        d = d.sample(n_max, random_state=1)
+    out = pd.DataFrame({FROM_CODE[c]: d[c] * 100 for c in d.columns if c in FROM_CODE and c != "OTH"})
+    out["Other"] = 100 - out.sum(axis=1)
+    return out.reset_index(drop=True)
+
+
+def export_projection(R, Sm, base, nat, ctx, calib, draws):
+    """Per seat: central projection (median scenario) plus, when poll-of-polls draws exist,
+    win probabilities and 90% intervals for candidate and party votes."""
+    by_seat = {}
     for seat, g in R.groupby("seat"):
         row = {"seat": seat}
         for _, x in g.iterrows():
-            m = x["method"]
-            row[m] = {
+            row[x["method"]] = {
                 "party": {CODE[p]: r1(x[f"{p}_party"]) for p in NM.PARTIES},
                 "candidate": {CODE[p]: r1(x[f"{p}_cand"]) for p in NM.PARTIES},
                 "winner": CODE[x["winner"]], "margin": r1(x["margin_pp"]),
@@ -122,10 +155,33 @@ def export_projection(R, Sm, base, nat):
         row["predecessor_share"] = r1(100 * x["predecessor_share"])
         row["assumed"] = {CODE[p]: (None if pd.isna(x[f"assumed_{p}_candidate"]) else x[f"assumed_{p}_candidate"])
                           for p in ["National", "Labour", "Green", "ACT"]}
-        seats.append(row)
+        by_seat[seat] = row
     counts = {r["method"]: {CODE[p]: int(r[p]) for p in NM.PARTIES} for _, r in Sm.iterrows()}
+
+    sim_counts = {}
+    if draws is not None:
+        for m in ("recent", "mean", "trend"):
+            O = NM.seat_party_offsets(ctx["W"], NM.project_lean(ctx["L"], ctx["target"], m), ctx["adj"])
+            S, Cs, seats = SIM.simulate_method(O, ctx["models"], ctx["pers"], draws, calib.get(m))
+            rows, dist, _ = SIM.summarise(S, Cs, seats)
+            for r in rows:
+                t = by_seat[r["seat"]].setdefault(m, {})
+                t["p_win"] = {CODE[p]: round(v, 3) for p, v in r["p_win"].items()}
+                t["cand_q"] = {CODE[p]: [r1(v) for v in q] for p, q in r["cand"].items()}
+                t["party_q"] = {CODE[p]: [r1(v) for v in q] for p, q in r["party"].items()}
+            sim_counts[m] = {CODE[p]: {**{k: v for k, v in d.items() if k != "dist"}, "mean": r1(d["mean"]),
+                                       "dist": {k: round(v, 4) for k, v in d["dist"].items()}}
+                             for p, d in dist.items()}
+        print("Simulated seat counts (recent):",
+              {p: (d["median"], d["lo"], d["hi"]) for p, d in sim_counts["recent"].items()})
+
+    acc = {m: c["accuracy"] for m, c in calib.items()} if calib else {}
+    errs = {m: {"parties": [CODE[p] for p in c["parties"]], "seat_sd": c["seat_sd"], "year_sd": c["year_sd"]}
+            for m, c in calib.items()} if calib else {}
     out = {"base_year": base, "scenario": {CODE[k]: r1(v) for k, v in nat.items()},
-           "counts": counts, "seats": seats}
+           "n_draws": 0 if draws is None else int(len(draws)),
+           "counts": counts, "sim_counts": sim_counts, "backtest": acc, "local_error": errs,
+           "seats": list(by_seat.values())}
     (SITE / "electorates.json").write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")),
                                            encoding="utf-8")
 
@@ -148,7 +204,9 @@ def main(argv=None):
     P, C, CT = NM.load()
     seats, locs = PR.load_geo(ROOT / "data" / "booths" / "geo" / "nz_localities.zip")
     R, Sm, placed, base = PR.main(nat=nat, geo=(seats, locs))
-    export_projection(R, Sm, base, {**nat, "Other": 100 - sum(nat.values())})
+    calib = load_calibration(P, C, CT)
+    draws = national_draws()
+    export_projection(R, Sm, base, {**nat, "Other": 100 - sum(nat.values())}, PR.main.context, calib, draws)
     n = export_localities(P, seats, locs, base)
     export_boundaries(seats)
     for f in ("localities.json", "electorates.json", "electorates.geojson"):

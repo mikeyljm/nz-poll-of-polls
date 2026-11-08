@@ -134,26 +134,39 @@ def project_adj(A, recent_years):
     return a
 
 
-def seat_party_shares(weights, lean, adj, nat):
-    """weights: DataFrame [seat, loc, w]. Returns DataFrame seat x party shares."""
+def seat_party_offsets(weights, lean, adj):
+    """Each seat's party vote relative to the national result (percentage points), before
+    clipping: the vote-weighted average of locality leans plus the electorate adjustment
+    for advance and special votes. Seat party share = national share + offset."""
     w = weights.merge(lean, left_on="loc", right_index=True, how="left", suffixes=("", "_lean"))
-    missing = w[PARTIES[0]].isna()
-    # localities with no history: fall back to the seat's average lean (computed below)
     out = []
     for seat, g in w.groupby("seat"):
         known = g[~g[PARTIES[0]].isna()]
         row = {"seat": seat, "votes": g.w.sum(), "share_no_history": g.loc[g[PARTIES[0]].isna(), "w"].sum() / g.w.sum()}
+        # localities with no history fall back to the seat's average lean
         a = adj.reindex(g["loc"]).fillna(adj.reindex(known["loc"]).mean() if len(known) else 0)
         for p in PARTIES + ["Other"]:
             base = np.average(known[p], weights=known.w) if len(known) else 0.0
             lv = g[p].fillna(base).values
             av = a[p].fillna(0).values
-            row[p] = nat[p] + np.average(lv + av, weights=g.w)
+            row[p] = np.average(lv + av, weights=g.w)
         out.append(row)
-    S = pd.DataFrame(out).set_index("seat")
+    return pd.DataFrame(out).set_index("seat")
+
+
+def shares_from_offsets(O, nat):
+    """Seat party shares (%) from offsets and a national result {party: %}."""
+    S = O.copy()
+    for p in PARTIES + ["Other"]:
+        S[p] = nat[p] + O[p]
     sh = S[PARTIES + ["Other"]].clip(lower=0)
     S[PARTIES + ["Other"]] = sh.div(sh.sum(axis=1), axis=0) * 100
     return S
+
+
+def seat_party_shares(weights, lean, adj, nat):
+    """weights: DataFrame [seat, loc, w]. Returns DataFrame seat x party shares."""
+    return shares_from_offsets(seat_party_offsets(weights, lean, adj), nat)
 
 
 # ------------------------------------------------------------------ candidate model
