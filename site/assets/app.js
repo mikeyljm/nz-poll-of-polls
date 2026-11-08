@@ -216,41 +216,57 @@
     const seatsBy = ORDER.filter((p) => S.seats[p]).map((p) => ({ p, n: S.seats[p].median }));
     const N = d3.sum(seatsBy, (d) => d.n);
     const el = $("#house-chart");
-    const W = 640, Hh = 340, cx = W / 2, cy = Hh - 24, R1 = 300, R0 = 118;
-    const rows = Math.max(6, Math.round(Math.sqrt(N / 2.2)));
-    const radii = d3.range(rows).map((i) => R0 + (i * (R1 - R0)) / (rows - 1));
-    let per = radii.map((r) => Math.round((N * r) / d3.sum(radii)));
+    // Horseshoe, like the Debating Chamber: two straight arms joined by a curve, open end
+    // (the Speaker's chair) at the bottom. Seats run from the foot of the left arm, round
+    // the curve, to the foot of the right arm, so blocs form wedges and the Speaker's
+    // right is the right-hand side of the picture.
+    const rows = 5, W = 600, R1 = 250, L = 150, top = 34;
+    const g = (2 * rows * L + Math.PI * rows * R1) / (N + Math.PI * rows * (rows - 1) / 2);
+    const radii = d3.range(rows).map((k) => R1 - k * g);
+    const Rm = d3.mean(radii), cx = W / 2, yc = top + R1, Hh = yc + L + 28;
+    const lens = radii.map((r) => 2 * L + Math.PI * r);
+    let per = lens.map((l) => Math.round((N * l) / d3.sum(lens)));
     let diff = N - d3.sum(per);
-    for (let i = rows - 1; diff !== 0; i = (i - 1 + rows) % rows) { per[i] += Math.sign(diff); diff -= Math.sign(diff); }
+    for (let i = 0; diff !== 0; i = (i + 1) % rows) { per[i] += Math.sign(diff); diff -= Math.sign(diff); }
     const pos = [];
-    radii.forEach((r, i) => {
-      for (let j = 0; j < per[i]; j++) {
-        const th = Math.PI - (per[i] === 1 ? Math.PI / 2 : (j * Math.PI) / (per[i] - 1));
-        pos.push({ th, r, x: cx + r * Math.cos(th), y: cy - r * Math.sin(th) });
+    radii.forEach((r, k) => {
+      const len = lens[k];
+      for (let j = 0; j < per[k]; j++) {
+        const sAlong = ((j + 0.5) / per[k]) * len;
+        let x, y, u;
+        if (sAlong < L) { x = cx - r; y = yc + L - sAlong; u = sAlong; }
+        else if (sAlong < L + Math.PI * r) { const ph = (sAlong - L) / r; x = cx - r * Math.cos(ph); y = yc - r * Math.sin(ph); u = L + ph * Rm; }
+        else { const s2 = sAlong - L - Math.PI * r; x = cx + r; y = yc + s2; u = L + Math.PI * Rm + s2; }
+        pos.push({ x, y, u, r });
       }
     });
-    pos.sort((a, b) => b.th - a.th || a.r - b.r);
+    pos.sort((a, b) => a.u - b.u || b.r - a.r);
     let k = 0;
     seatsBy.forEach((d) => { for (let i = 0; i < d.n; i++) pos[k++].p = d.p; });
-    const dotR = Math.min(10, (Math.PI * R1) / per[rows - 1] / 2.3);
+    const dotR = g * 0.4;
     const svg = d3.select(el).append("svg").attr("viewBox", `0 0 ${W} ${Hh}`).attr("role", "img")
       .attr("aria-label", `Projected House of ${N} seats: ` + seatsBy.map((d) => `${name(d.p)} ${d.n}`).join(", "));
     svg.selectAll("circle").data(pos).join("circle").attr("cx", (d) => d.x).attr("cy", (d) => d.y)
       .attr("r", dotR).attr("fill", (d) => colour(d.p))
       .on("pointermove", (ev, d) => showTip(`<div class="t-head">${sw(d.p)} ${name(d.p)}</div>${S.seats[d.p].median} seats (90% interval ${S.seats[d.p].lo}–${S.seats[d.p].hi})`, ev))
       .on("pointerleave", hideTip);
+    // Speaker's chair at the open end
+    svg.append("rect").attr("x", cx - 9).attr("y", yc + L + 2).attr("width", 18).attr("height", 12).attr("rx", 2)
+      .attr("fill", "none").attr("stroke", "var(--muted)").attr("stroke-width", 1.5);
+    svg.append("text").attr("x", cx).attr("y", yc + L + 26).attr("text-anchor", "middle").attr("font-size", 12)
+      .attr("fill", "var(--muted)").text("Speaker");
     const maj = Math.floor(N / 2) + 1;
-    svg.append("line").attr("x1", cx).attr("x2", cx).attr("y1", cy - R1 - 16).attr("y2", cy + 4)
+    svg.append("line").attr("x1", cx).attr("x2", cx).attr("y1", top - 12).attr("y2", yc - radii[rows - 1] + dotR + 6)
       .attr("stroke", "var(--ink)").attr("stroke-width", 1.5).attr("stroke-dasharray", "3 3");
-    svg.append("text").attr("x", cx).attr("y", cy - R1 - 22).attr("text-anchor", "middle").attr("font-size", 14)
+    svg.append("text").attr("x", cx).attr("y", top - 18).attr("text-anchor", "middle").attr("font-size", 14)
       .attr("font-weight", 700).attr("fill", "var(--ink)").text(`${maj} for a majority`);
-    svg.append("text").attr("x", cx).attr("y", cy + 2).attr("text-anchor", "middle").attr("font-size", 40)
+    svg.append("text").attr("x", cx).attr("y", yc + 18).attr("text-anchor", "middle").attr("font-size", 48)
       .attr("font-weight", 800).attr("fill", "var(--ink)").attr("letter-spacing", "-0.02em").text(N);
-    svg.append("text").attr("x", cx).attr("y", cy + 20).attr("text-anchor", "middle").attr("font-size", 13)
+    svg.append("text").attr("x", cx).attr("y", yc + 40).attr("text-anchor", "middle").attr("font-size", 14)
       .attr("fill", "var(--muted)").text("seats");
     const over = N - 120;
     $("#house-cap").innerHTML = `<div class="legend">${seatsBy.map((d) => `<span>${sw(d.p)}${name(d.p)} <b>${d.n}</b></span>`).join("")}</div>` +
-      `Median seats in each party's simulations, left to right by bloc.${over > 0 ? ` The House is ${N} seats because of a ${over}-seat overhang.` : ""}`;
+      `Median seats in each party's simulations, arranged by bloc around the chamber.${over > 0 ? ` The House is ${N} seats because of a ${over}-seat overhang.` : ""}`;
   })();
 
   const H = S.headline;
