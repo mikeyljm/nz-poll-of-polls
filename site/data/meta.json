@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-08T04:12+00:00",
+ "updated": "2026-11-08T07:40+00:00",
  "as_of_week": "2026-11-07",
  "model_end": "2026-11-08",
  "last_poll": "2026-11-03",
@@ -59,12 +59,12 @@
   "DGI": "DigiPoll"
  },
  "diagnostics": {
-  "max_rhat": 1.006,
-  "min_ess_bulk": 504,
+  "max_rhat": 1.013,
+  "min_ess_bulk": 406,
   "draws": 5000,
   "sampler": "nutpie"
  },
- "input_hash": "8adc379f32677260",
+ "input_hash": "92e4dd7c4b32499a",
  "iso_week": [
   2026,
   45
