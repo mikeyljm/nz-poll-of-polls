@@ -1,7 +1,7 @@
 {
- "updated": "2026-11-07T04:49+00:00",
+ "updated": "2026-11-08T00:49+00:00",
  "as_of_week": "2026-11-07",
- "model_end": "2026-11-07",
+ "model_end": "2026-11-08",
  "last_poll": "2026-11-03",
  "last_election": "2023-10-14",
  "previous_election": "2020-10-17",
@@ -59,12 +59,12 @@
   "DGI": "DigiPoll"
  },
  "diagnostics": {
-  "max_rhat": 1.009,
-  "min_ess_bulk": 321,
+  "max_rhat": 1.007,
+  "min_ess_bulk": 369,
   "draws": 4000,
   "sampler": "nutpie"
  },
- "input_hash": "284c45520476a612",
+ "input_hash": "c85876222766f179",
  "iso_week": [
   2026,
   45
