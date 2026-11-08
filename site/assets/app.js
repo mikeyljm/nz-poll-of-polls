@@ -212,7 +212,10 @@
       (vals[1] >= 0.05 ? `${Lb} do in ${pc(vals[1])}. ` : "") +
       `In ${pc(vals[2])}, neither side does and ${K} holds the balance.`;
 
-    const ORDER = ["TPM", "GRN", "LAB", "OPP", "NAT", "ACT", "NZF"];
+    // Around the chamber from the foot of the left arm to the foot of the right arm:
+    // the two major parties sit at the foot of each arm, nearest the Speaker, and the
+    // smaller parties further round towards the curve.
+    const ORDER = ["LAB", "GRN", "TPM", "OPP", "NZF", "ACT", "NAT"];
     const seatsBy = ORDER.filter((p) => S.seats[p]).map((p) => ({ p, n: S.seats[p].median }));
     const N = d3.sum(seatsBy, (d) => d.n);
     const el = $("#house-chart");
@@ -220,7 +223,7 @@
     // (the Speaker's chair) at the bottom. Seats run from the foot of the left arm, round
     // the curve, to the foot of the right arm, so blocs form wedges and the Speaker's
     // right is the right-hand side of the picture.
-    const rows = 5, W = 600, R1 = 250, L = 150, top = 34;
+    const rows = 3, W = 600, R1 = 240, L = 210, top = 34;
     const g = (2 * rows * L + Math.PI * rows * R1) / (N + Math.PI * rows * (rows - 1) / 2);
     const radii = d3.range(rows).map((k) => R1 - k * g);
     const Rm = d3.mean(radii), cx = W / 2, yc = top + R1, Hh = yc + L + 28;
@@ -266,7 +269,7 @@
       .attr("fill", "var(--muted)").text("seats");
     const over = N - 120;
     $("#house-cap").innerHTML = `<div class="legend">${seatsBy.map((d) => `<span>${sw(d.p)}${name(d.p)} <b>${d.n}</b></span>`).join("")}</div>` +
-      `Median seats in each party's simulations, arranged by bloc around the chamber.${over > 0 ? ` The House is ${N} seats because of a ${over}-seat overhang.` : ""}`;
+      `Median seats in each party's simulations. Labour and National sit at the foot of each side, nearest the Speaker.${over > 0 ? ` The House is ${N} seats because of a ${over}-seat overhang.` : ""}`;
   })();
 
   const H = S.headline;
