@@ -76,19 +76,77 @@
   const order = MAIN.slice().sort((a, b) => cur[b].median - cur[a].median);
   $("#vote-sub").textContent =
     `Estimated support for the week of ${dateFmt(parseDate(meta.as_of_week))}, with change since the ${eYear} election.`;
-  (function voteList() {
-    const xmax = Math.ceil(d3.max(order, (p) => cur[p].hi) / 10) * 10;
-    const xp = (v) => `${(v / xmax) * 100}%`;
-    $("#tiles").innerHTML = order.map((p) => {
-      const c = cur[p];
-      return `<div class="vrow"><div class="pname">${sw(p)}${name(p)}</div>
-        <div class="track" aria-hidden="true"><span class="thr" style="left:${xp(5)}"></span>
-          <span class="band" style="left:${xp(c.lo)};width:calc(${xp(c.hi)} - ${xp(c.lo)});background:${colour(p)}"></span>
-          <span class="mid" style="left:${xp(c.median)};background:${colour(p)}"></span></div>
-        <div class="pv">${fmt1(c.median)}%</div>
-        <div class="pi">${fmt1(c.lo)}–${fmt1(c.hi)}${c.since_election != null ? `<br>${signed(c.since_election)} since ${eYear}` : ""}</div></div>`;
-    }).join("") + `<p class="note" style="margin-top:8px">Bars show the 90% interval; the dashed line is the 5% threshold.</p>`;
-  })();
+  // Party vote: one distribution per party on a shared axis (ridgeline), median dashed,
+  // 90% interval marked. Falls back to interval bars if the data has no densities.
+  function drawVote() {
+    const el = $("#tiles");
+    el.innerHTML = "";
+    const hasD = order.every((p) => cur[p].density);
+    const W = Math.max(320, el.clientWidth || 760), small = W < 560;
+    const rowH = small ? 80 : 98, m = { t: 44, r: small ? 10 : 24, b: 6, l: small ? 30 : 30 };
+    const Hh = m.t + m.b + order.length * rowH;
+    const xmax = Math.ceil(d3.max(order, (p) => hasD ? cur[p].density.x0 + cur[p].density.dx * (cur[p].density.y.length - 1) : cur[p].hi) / 5) * 5;
+    const x = d3.scaleLinear().domain([0, xmax]).range([m.l, W - m.r]);
+    const svg = d3.select(el).append("svg").attr("viewBox", `0 0 ${W} ${Hh}`).attr("role", "img")
+      .attr("aria-label", "Distribution of each party's estimated vote: " + order.map((p) => `${name(p)} ${fmt1(cur[p].median)}% (90% interval ${fmt1(cur[p].lo)} to ${fmt1(cur[p].hi)})`).join("; "));
+    svg.append("text").attr("x", W - m.r).attr("y", 12).attr("text-anchor", "end").attr("font-size", 13).attr("fill", "var(--ink-2)").text("Party vote %");
+    svg.append("g").attr("class", "axis").attr("transform", `translate(0,${m.t - 10})`)
+      .call(d3.axisTop(x).ticks(small ? 4 : 7).tickSize(6).tickFormat((d) => d))
+      .call((g) => g.select(".domain").attr("stroke", "var(--ink)").attr("stroke-width", 1.5))
+      .call((g) => g.selectAll(".tick line").attr("stroke", "var(--ink)"))
+      .call((g) => g.selectAll("text").attr("font-size", 13).attr("fill", "var(--ink-2)"));
+    // 5% threshold through every row
+    svg.append("line").attr("x1", x(5)).attr("x2", x(5)).attr("y1", m.t - 10).attr("y2", Hh - m.b)
+      .attr("stroke", "var(--muted)").attr("stroke-dasharray", "2 4");
+    svg.append("text").attr("x", x(5) + 4).attr("y", m.t + 6).attr("font-size", 11).attr("fill", "var(--muted)").text("5% threshold");
+    const peak = rowH - 40;
+    order.forEach((p, i) => {
+      const c = cur[p], base = m.t + i * rowH + rowH - 18, col = colour(p);
+      const g = svg.append("g");
+      g.append("line").attr("x1", m.l).attr("x2", W - m.r).attr("y1", base).attr("y2", base).attr("stroke", "var(--rule)");
+      let pts, yAt;
+      if (hasD) {
+        const D = c.density;
+        pts = D.y.map((v, k) => [D.x0 + k * D.dx, v]);
+        yAt = (v) => { const k = (v - D.x0) / D.dx, k0 = Math.max(0, Math.min(D.y.length - 1, Math.floor(k))), k1 = Math.min(D.y.length - 1, k0 + 1), f = k - k0; return D.y[k0] * (1 - f) + D.y[k1] * f; };
+      } else {   // approximate with a normal curve from the interval
+        const sd = (c.hi - c.lo) / 3.29;
+        pts = d3.range(-3.5, 3.51, 0.1).map((z) => [c.median + z * sd, Math.exp(-0.5 * z * z)]);
+        yAt = (v) => Math.exp(-0.5 * ((v - c.median) / sd) ** 2);
+      }
+      const yv = (v) => base - v * peak;
+      g.append("path").datum(pts).attr("d", d3.area().x((d) => x(d[0])).y0(base).y1((d) => yv(d[1])).curve(d3.curveBasis))
+        .attr("fill", col).attr("fill-opacity", p === "ACT" ? 0.85 : 0.82);
+      g.append("path").datum(pts).attr("d", d3.line().x((d) => x(d[0])).y((d) => yv(d[1])).curve(d3.curveBasis))
+        .attr("fill", "none").attr("stroke", col).attr("stroke-width", 2);
+      // median (dashed, labelled above the peak) and 90% interval
+      const lineCol = p === "ACT" ? "rgba(30,35,38,.65)" : "rgba(255,255,255,.9)";
+      [[c.lo, false], [c.median, true], [c.hi, false]].forEach(([v, isMed]) => {
+        g.append("line").attr("x1", x(v)).attr("x2", x(v)).attr("y1", base).attr("y2", yv(yAt(v)))
+          .attr("stroke", lineCol).attr("stroke-width", isMed ? 1.6 : 1.2).attr("stroke-dasharray", "3 3");
+      });
+      g.append("text").attr("x", x(c.median)).attr("y", yv(1) - 6).attr("text-anchor", "middle")
+        .attr("font-size", small ? 13 : 15).attr("font-weight", 800).attr("fill", "var(--ink)").text(`${fmt1(c.median)}%`);
+      [[c.lo, "end", -4], [c.hi, "start", 4]].forEach(([v, anchor, dx]) => {
+        g.append("line").attr("x1", x(v)).attr("x2", x(v)).attr("y1", base).attr("y2", base + 9).attr("stroke", "var(--ink)").attr("stroke-width", 1.2);
+        g.append("text").attr("x", x(v) + dx).attr("y", base + 14).attr("text-anchor", anchor).attr("font-size", 12)
+          .attr("fill", "var(--ink-2)").text(`${fmt1(v)}%`);
+      });
+      // party name: left of the curve if there's room, otherwise to the right
+      const label = g.append("text").attr("y", base - peak * 0.45).attr("font-size", small ? 15 : 20).attr("font-weight", 500)
+        .attr("fill", "var(--ink)").text(name(p));
+      const tw = label.node().getComputedTextLength();
+      const left = x(c.median) - (x(c.median) - x(c.lo)) * 1.6 - 10;
+      if (left - tw > m.l) label.attr("x", left).attr("text-anchor", "end");
+      else label.attr("x", x(c.median) + (x(c.hi) - x(c.median)) * 1.6 + 10).attr("text-anchor", "start");
+      g.append("rect").attr("x", m.l).attr("y", base - rowH + 18).attr("width", W - m.l - m.r).attr("height", rowH).attr("fill", "transparent")
+        .on("pointermove", (ev) => showTip(`<div class="t-head">${sw(p)} ${name(p)}</div>Median ${fmt1(c.median)}%<br>50% interval ${fmt1(c.q25 ?? c.lo)}–${fmt1(c.q75 ?? c.hi)}<br>90% interval ${fmt1(c.lo)}–${fmt1(c.hi)}${c.since_election != null ? `<br>${signed(c.since_election)} since ${eYear}` : ""}${c.p_threshold < 0.995 ? `<br>Chance of 5% or more: ${Math.round(c.p_threshold * 100)}%` : ""}`, ev))
+        .on("pointerleave", hideTip);
+    });
+    d3.select(el).append("p").attr("class", "note").style("margin-top", "4px")
+      .text(`Each curve shows how likely each level of support is, given the polls. Dashed lines mark the median and the 90% interval. Hover a party for its change since ${eYear}.`);
+  }
+  drawVote();
 
   // ------------------------------------------------------------------ trend chart
   const weeks = P.weeks.map(parseDate);
@@ -537,5 +595,5 @@
 
   // redraw trend on resize
   let rt;
-  window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => drawTrend(rangeKey), 200); });
+  window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { drawTrend(rangeKey); drawVote(); }, 200); });
 })();

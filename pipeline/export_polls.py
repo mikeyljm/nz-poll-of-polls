@@ -35,6 +35,23 @@ def _dump(obj, name):
                                       encoding="utf-8")
 
 
+def density(x: np.ndarray, n: int = 120) -> dict:
+    """Gaussian kernel density on a grid spanning the draws (Silverman bandwidth),
+    scaled so the peak is 1. Returns {"x0", "dx", "y"} to keep the JSON small."""
+    sd = x.std()
+    iqr = np.subtract(*np.percentile(x, [75, 25]))
+    bw = 1.15 * 0.9 * min(sd, iqr / 1.34 if iqr > 0 else sd) * len(x) ** -0.2 or 0.05   # slightly smoother than Silverman
+    lo, hi = max(0.0, x.min() - 3 * bw), x.max() + 3 * bw
+    grid = np.linspace(lo, hi, n)
+    # binned KDE: histogram then smooth (fast for thousands of draws)
+    hist, edges = np.histogram(x, bins=n, range=(lo, hi))
+    centres = (edges[:-1] + edges[1:]) / 2
+    y = (hist[None, :] * np.exp(-0.5 * ((grid[:, None] - centres[None, :]) / bw) ** 2)).sum(axis=1)
+    y = y / y.max()
+    return {"x0": round(float(lo), 3), "dx": round(float(grid[1] - grid[0]), 4),
+            "y": [round(float(v), 3) for v in y]}
+
+
 def current_week_index(d) -> int:
     """Index of the week containing MODEL_END (the 'today' estimate)."""
     end = pd.Timestamp(cfg.MODEL_END)
@@ -60,6 +77,11 @@ def export(idata, d, polls: pd.DataFrame, diagnostics: dict) -> dict:
     current = {p: {"median": r(ed[p].median() * 100), "lo": r(ed[p].quantile(.05) * 100),
                    "hi": r(ed[p].quantile(.95) * 100), "p_threshold": r((ed[p] >= cfg.THRESHOLD).mean(), 3)}
                for p in cfg.PARTIES}
+    # density of each party's estimate this week, for the distribution chart
+    for p in cfg.PARTIES:
+        current[p]["density"] = density(ed[p].to_numpy() * 100)
+        current[p]["q25"] = r(ed[p].quantile(.25) * 100)
+        current[p]["q75"] = r(ed[p].quantile(.75) * 100)
     # change since the last election (in percentage points)
     last_e = d["elections"].iloc[-1]
     for p in cfg.PARTIES:
