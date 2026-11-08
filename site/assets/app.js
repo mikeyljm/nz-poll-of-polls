@@ -96,6 +96,9 @@
       .call((g) => g.select(".domain").attr("stroke", "var(--ink)").attr("stroke-width", 1.5))
       .call((g) => g.selectAll(".tick line").attr("stroke", "var(--ink)"))
       .call((g) => g.selectAll("text").attr("font-size", 13).attr("fill", "var(--ink-2)"));
+    // 0% baseline: solid, full height
+    svg.append("line").attr("x1", x(0)).attr("x2", x(0)).attr("y1", m.t - 6).attr("y2", axisY)
+      .attr("stroke", "var(--ink)").attr("stroke-width", 1.5);
     // 5% threshold through every row
     svg.append("line").attr("x1", x(5)).attr("x2", x(5)).attr("y1", m.t - 6).attr("y2", axisY)
       .attr("stroke", "var(--muted)").attr("stroke-dasharray", "2 4");
@@ -128,11 +131,17 @@
       });
       g.append("text").attr("x", x(c.median)).attr("y", yv(1) - 6).attr("text-anchor", "middle")
         .attr("font-size", small ? 13 : 15).attr("font-weight", 800).attr("fill", "var(--ink)").text(`${fmt1(c.median)}%`);
-      [[c.lo, "end", -4], [c.hi, "start", 4]].forEach(([v, anchor, dx]) => {
-        g.append("line").attr("x1", x(v)).attr("x2", x(v)).attr("y1", base).attr("y2", base + 9).attr("stroke", "var(--ink)").attr("stroke-width", 1.2);
-        g.append("text").attr("x", x(v) + dx).attr("y", base + 14).attr("text-anchor", anchor).attr("font-size", 12)
-          .attr("fill", "var(--ink-2)").text(`${fmt1(v)}%`);
-      });
+      [c.lo, c.hi].forEach((v) => g.append("line").attr("x1", x(v)).attr("x2", x(v)).attr("y1", base).attr("y2", base + 9)
+        .attr("stroke", "var(--ink)").attr("stroke-width", 1.2));
+      if (x(c.hi) - x(c.lo) < 70 || x(c.lo) - 34 < x(0)) {
+        // narrow interval or close to 0%: one combined label, kept clear of the 0% line
+        g.append("text").attr("x", Math.max(x(0) + 4, x(c.lo))).attr("y", base + 20).attr("font-size", 12)
+          .attr("fill", "var(--ink-2)").text(`${fmt1(c.lo)}–${fmt1(c.hi)}%`);
+      } else {
+        [[c.lo, "end", -4], [c.hi, "start", 4]].forEach(([v, anchor, dx]) =>
+          g.append("text").attr("x", x(v) + dx).attr("y", base + 14).attr("text-anchor", anchor).attr("font-size", 12)
+            .attr("fill", "var(--ink-2)").text(`${fmt1(v)}%`));
+      }
       // party name: left of the curve if there's room, otherwise to the right
       const label = g.append("text").attr("y", base - peak * 0.45).attr("font-size", small ? 15 : 20).attr("font-weight", 500)
         .attr("fill", "var(--ink)").text(name(p));
