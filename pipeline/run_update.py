@@ -113,6 +113,7 @@ def main(argv=None) -> int:
                     str(ROOT / "data" / "booths" / "nz_data"), str(ROOT / "build" / "booths" / "parsed")],
                    check=True, cwd=ROOT / "pipeline" / "booths")
     subprocess.run([sys.executable, str(ROOT / "pipeline" / "export_booths.py")], check=True)
+    EP.export_seats(meta)
 
     META.write_text(json.dumps({**meta, "input_hash": h, "iso_week": list(this_week)},
                                ensure_ascii=False, indent=1), encoding="utf-8")

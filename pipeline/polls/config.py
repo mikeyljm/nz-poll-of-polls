@@ -95,32 +95,20 @@ ELECTORATE_EXEMPTION = 1    # electorates needed to bypass the threshold
 # --------------------------------------------------------------------------
 # Electorate assumptions
 # --------------------------------------------------------------------------
-# Only electorates that could matter for MMP (threshold exemptions and
-# overhang) need listing. Every other electorate is won by National or Labour,
-# whose electorate wins never exceed their list entitlement, so they don't
-# change seat totals.
+# General electorates come from the voting-place electorate model
+# (pipeline/booths/simulate.py): each simulation's national vote produces that
+# simulation's winner in all 64 general seats, which then feed the MMP allocation
+# (including overhang, and ACT's or the Greens' threshold exemptions).
 #
-# Each entry: probabilities of each party winning the seat when that party's
-# national vote is at its median. "swing_beta" links the chance to the party's
-# simulated national vote: p = invlogit(logit(p0) + beta * relative_deviation),
-# so electorate results move with the national swing. Set beta = 0 for
-# independent draws.
+# The Māori electorates aren't covered by that model, so they use stated
+# probabilities. Each entry: probabilities of each party winning the seat when
+# that party's national vote is at its median. "SWING_BETA" links the chance to
+# the party's simulated national vote: p = invlogit(logit(p0) + beta * relative
+# deviation), so these seats move with the national swing.
 #
-# THESE ARE PLACEHOLDERS carried over from the 2026 campaign. Update them once
-# the 2026 electorate results are known (who holds each seat now).
-ELECTORATES = {
-    # Threshold-exemption seats for ACT
-    "Epsom":            {"ACT": 0.85, "NAT": 0.15},
-    "Tāmaki":           {"ACT": 0.55, "NAT": 0.45},
-    # Green-held / competitive inner-city seats
-    "Auckland Central": {"GRN": 0.70, "LAB": 0.15, "NAT": 0.15},
-    "Wellington Central": {"GRN": 0.70, "LAB": 0.30},
-    "Rongotai":         {"GRN": 0.50, "LAB": 0.50},
-    # Seats where minor parties have a (long-shot) chance
-    "Northland":        {"NAT": 0.75, "NZF": 0.15, "LAB": 0.10},
-    "Ilam":             {"NAT": 0.70, "OPP": 0.15, "LAB": 0.15},
-    # Māori electorates: fixed to the standard poll-projection assumption
-    # (TPM holds four; Labour wins Te Tai Tokerau, Te Tai Tonga, Ikaroa-Rāwhiti)
+# THESE ARE PLACEHOLDERS from the 2026 campaign. Update them once the 2026 Māori
+# electorate results are known.
+MAORI_ELECTORATES = {
     "Te Tai Tokerau":   {"LAB": 1.0},
     "Tāmaki Makaurau":  {"TPM": 1.0},
     "Hauraki-Waikato":  {"TPM": 1.0},
@@ -129,6 +117,18 @@ ELECTORATES = {
     "Te Tai Tonga":     {"LAB": 1.0},
     "Ikaroa-Rāwhiti":   {"LAB": 1.0},
 }
+
+# Only used if the electorate model hasn't run (e.g. testing the poll model alone):
+# the general electorates that can change seat totals. National and Labour wins
+# elsewhere are left out in that case.
+GENERAL_FALLBACK = {
+    "Epsom":            {"ACT": 0.85, "NAT": 0.15},
+    "Tāmaki":           {"ACT": 0.55, "NAT": 0.45},
+    "Auckland Central": {"GRN": 0.70, "LAB": 0.15, "NAT": 0.15},
+    "Wellington Central": {"GRN": 0.70, "LAB": 0.30},
+    "Rongotai":         {"GRN": 0.50, "LAB": 0.50},
+}
+ELECTORATES = {**GENERAL_FALLBACK, **MAORI_ELECTORATES}   # backwards compatible
 SWING_BETA = 2.0
 
 # Parties or candidates that can win electorates but aren't in the vote model.

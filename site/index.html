@@ -50,6 +50,7 @@
   <section id="seats">
     <h2>Seats if an election were held today</h2>
     <p class="sub" id="seats-sub"></p>
+    <div class="callout" id="overhang-note" hidden></div>
     <div class="two">
       <div>
         <h3>Who could govern?</h3>
@@ -117,7 +118,7 @@
     <p>True party-vote intention is modelled week by week as a random walk on the log-ratio scale, so shares always add to 100. Each poll is a noisy reading of that week's true value, shifted by the pollster's <em>house effect</em> (a persistent lean, plus drift between terms) and by an <em>industry</em> error shared by every poll in a term. Past election results enter as near-exact readings with no house effect, which is what anchors everything else. Because the current term has no result yet, its industry error comes from how large it has been in past terms: that is the main source of uncertainty, and the reason the bands are wider than a simple average's.</p>
     <p>The model is fitted in PyMC every time a new poll appears, and again weekly so the estimate keeps moving forward between polls. Polls are collected from the Wikipedia polling page each morning; earlier polls come from the <a href="https://github.com/Nixinova/NZPolls">NZPolls</a> dataset.</p>
     <h3>Seats</h3>
-    <p>For each of thousands of simulated election results, seats are allocated under MMP: the 5% threshold or one-electorate exemption, Sainte-Laguë over 120 seats, and overhang. Party-vote polls say little about individual electorates, so the electorates that can change the totals (ACT's seats, the Māori electorates, Green-held seats) use stated probabilities that move with each party's national vote. Those assumptions are listed below.</p>
+    <p>For each of thousands of simulated election results, seats are allocated under MMP: the 5% threshold or one-electorate exemption, Sainte-Laguë over 120 seats, and overhang. Each simulation's 64 general electorates come from the electorate model described below, run on that simulation's national vote. So ACT's or the Greens' electorate wins (and their threshold exemptions), and any overhang from a party winning more electorates than its party vote entitles it to, follow the same draw. The Māori electorates aren't covered by that model and use stated probabilities that move with each party's national vote.</p>
     <div id="assumptions"></div>
     <h3>Voting places and electorates</h3>
     <p>Election-day voting places are grouped by suburb or town using the Electoral Commission's results by voting place for every election since 2002. A place's <em>lean</em> is its party share minus the national share. Advance and special votes can't be placed on a map, so they enter the electorate projections as each electorate's gap between all votes and election-day votes.</p>

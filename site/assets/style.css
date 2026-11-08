@@ -105,3 +105,4 @@ table.data tbody tr:hover { background: var(--surface-2); }
 .pbar i { display: block; height: 100%; }
 td .q { display: block; font-size: 11px; color: var(--muted); }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.callout { margin: 0 0 18px; padding: 12px 16px; background: var(--surface-2); border-left: 3px solid var(--accent); border-radius: 4px; font-size: 15px; max-width: 52em; }

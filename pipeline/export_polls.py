@@ -112,8 +112,25 @@ def export(idata, d, polls: pd.DataFrame, diagnostics: dict) -> dict:
     _dump({"meta": meta, "weeks": [w.date().isoformat() for w in weeks], "trend": trend,
            "current": current, "polls": pl, "elections": el, "house": house}, "polls.json")
 
-    # seats
-    seat_draws, winners = S.simulate(ed)
+    # scenario for the electorate model
+    med = {p: round(ed[p].median() * 100, 2) for p in cfg.PARTIES}
+    cfg.OUT_DIR.mkdir(parents=True, exist_ok=True)
+    (cfg.OUT_DIR / "current_median.json").write_text(json.dumps(med))
+    ed.to_csv(cfg.OUT_DIR / "current_draws.csv", index=False)
+    export_final_check()
+    return meta
+
+
+def export_seats(meta: dict):
+    """MMP seats and coalitions, run after the electorate model so each draw's general
+    electorate winners come from that draw's national vote."""
+    ed = pd.read_csv(cfg.OUT_DIR / "current_draws.csv")
+    gw_file = ROOT / "build" / "booths" / "general_winner_draws.csv"
+    gw = pd.read_csv(gw_file) if gw_file.exists() else None
+    if gw is not None and len(gw) != len(ed):
+        print("Electorate draws don't match vote draws; using fallback electorate assumptions.")
+        gw = None
+    seat_draws, winners = S.simulate(ed, general_winners=gw)
     total = seat_draws["TOTAL"]
     seats = {}
     for p in [c for c in seat_draws.columns if c != "TOTAL"]:
@@ -125,22 +142,28 @@ def export(idata, d, polls: pd.DataFrame, diagnostics: dict) -> dict:
     coal = [{"name": x.coalition, "parties": cfg.COALITIONS[x.coalition], "p_majority": r(x.p_majority, 3),
              "median": int(x.median_seats), "lo": int(x.lo), "hi": int(x.hi)} for _, x in cp.iterrows()]
     head = {k: r(v, 3) for k, v in S.headline(seat_draws).items()}
-    elect = {name: {p: r(v, 3) for p, v in winners[name].value_counts(normalize=True).items()}
-             for name in winners.columns}
+    maori = {name: {p: r(v, 3) for p, v in winners[name].value_counts(normalize=True).items()}
+             for name in cfg.MAORI_ELECTORATES}
+    # key general seats for the method page: chance each party wins them in the simulation
+    key = {}
+    if gw is not None:
+        for name in gw.columns:
+            vc = gw[name].value_counts(normalize=True)
+            # seats a party other than National or Labour has a real chance of winning
+            if vc.drop(["NAT", "LAB"], errors="ignore").max() >= 0.05 if len(vc.drop(["NAT", "LAB"], errors="ignore")) else False:
+                key[name] = {p: r(v, 3) for p, v in vc.items() if v >= 0.005}
+    overhang = (total - cfg.TOTAL_SEATS)
     _dump({"meta": {"as_of_week": meta["as_of_week"], "updated": meta["updated"],
-                    "total_seats": {"median": int(total.median()), "max": int(total.max())},
+                    "total_seats": {"median": int(total.median()), "max": int(total.max()),
+                                    "p_overhang": r((overhang > 0).mean(), 3),
+                                    "overhang_median": int(overhang.median())},
+                    "electorates_from_model": gw is not None,
                     "blocs": {"right": cfg.RIGHT_BLOC, "left": cfg.LEFT_BLOC, "kingmaker": cfg.KINGMAKER}},
            "seats": seats, "coalitions": coal, "headline": head,
-           "electorate_assumptions": {"probabilities": cfg.ELECTORATES, "simulated": elect,
-                                      "swing_beta": cfg.SWING_BETA}}, "seats.json")
-
-    # scenario for the electorate model
-    med = {p: round(ed[p].median() * 100, 2) for p in cfg.PARTIES}
-    cfg.OUT_DIR.mkdir(parents=True, exist_ok=True)
-    (cfg.OUT_DIR / "current_median.json").write_text(json.dumps(med))
-    ed.to_csv(cfg.OUT_DIR / "current_draws.csv", index=False)
-    export_final_check()
-    return meta
+           "electorate_assumptions": {"maori": cfg.MAORI_ELECTORATES, "maori_simulated": maori,
+                                      "general_key_seats": key, "swing_beta": cfg.SWING_BETA}}, "seats.json")
+    print("Seats (median, 90%):", {p: (v["median"], v["lo"], v["hi"]) for p, v in seats.items() if v["hi"] > 0},
+          "| overhang P =", r((overhang > 0).mean(), 3))
 
 
 def export_final_check():

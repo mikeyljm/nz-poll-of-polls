@@ -68,7 +68,7 @@ def shift_votes(share_draws: pd.DataFrame, source: str, frac: float,
 
 
 def _draw_electorates(share_draws: pd.DataFrame, rng, beta=cfg.SWING_BETA,
-                      ref_median: pd.Series | None = None):
+                      ref_median: pd.Series | None = None, electorates=None):
     """
     Electorate winners for every draw: DataFrame (draw x electorate).
     ref_median: the national vote at which config.ELECTORATES probabilities
@@ -79,7 +79,7 @@ def _draw_electorates(share_draws: pd.DataFrame, rng, beta=cfg.SWING_BETA,
     if ref_median is not None:  # small parties added later keep their own median
         med = ref_median.reindex(med.index).fillna(med)
     out = {}
-    for name, probs in cfg.ELECTORATES.items():
+    for name, probs in (cfg.ELECTORATES if electorates is None else electorates).items():
         parties = list(probs)
         logp = np.log(np.array([probs[p] for p in parties]))[None, :]
         rel = np.column_stack([
@@ -95,10 +95,15 @@ def _draw_electorates(share_draws: pd.DataFrame, rng, beta=cfg.SWING_BETA,
 
 
 def simulate(share_draws: pd.DataFrame, seed=2026,
-             baseline: pd.DataFrame | None = None) -> tuple[pd.DataFrame, pd.DataFrame]:
+             baseline: pd.DataFrame | None = None,
+             general_winners: pd.DataFrame | None = None) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
-    share_draws: posterior draws of election-day party vote (columns = parties).
-    baseline:    for scenarios, the unshifted draws (sets electorate reference).
+    share_draws:     posterior draws of election-day party vote (columns = parties).
+    baseline:        for scenarios, the unshifted draws (sets electorate reference).
+    general_winners: winner of every general electorate in each draw (draw x seat,
+                     party codes), from the electorate model, in the same draw order.
+                     If given, these replace GENERAL_FALLBACK; the Māori electorates
+                     still come from MAORI_ELECTORATES.
     Returns (seats, electorate_winners), one row per draw.
     """
     rng = np.random.default_rng(seed)
@@ -107,12 +112,19 @@ def simulate(share_draws: pd.DataFrame, seed=2026,
         shares[p] = s
         shares["OTH"] = (shares["OTH"] - s).clip(lower=0)
     ref = None if baseline is None else baseline.median()
-    winners = _draw_electorates(shares, rng, ref_median=ref)
+    if general_winners is not None:
+        assert len(general_winners) == len(shares), "electorate draws must match vote draws"
+        maori = _draw_electorates(shares, rng, ref_median=ref, electorates=cfg.MAORI_ELECTORATES)
+        winners = pd.concat([general_winners.reset_index(drop=True), maori], axis=1)
+    else:
+        winners = _draw_electorates(shares, rng, ref_median=ref)
 
     rows = []
     vote_parties = [p for p in shares.columns if p != "OTH"]
+    W = winners.to_numpy()
     for i in range(len(shares)):
-        e_counts = winners.iloc[i].value_counts().to_dict()
+        u, c = np.unique(W[i], return_counts=True)
+        e_counts = dict(zip(u.tolist(), c.tolist()))
         seats = allocate_seats(shares.iloc[i][vote_parties].to_dict(), e_counts)
         rows.append(seats)
     seats = pd.DataFrame(rows).fillna(0).astype(int)

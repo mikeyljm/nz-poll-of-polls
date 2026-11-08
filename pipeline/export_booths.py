@@ -125,14 +125,14 @@ def load_calibration(P, C, CT):
     return out["methods"]
 
 
-def national_draws(n_max=5000):
-    """Poll-of-polls posterior draws of the national vote, in the electorate model's names (%)."""
+def national_draws():
+    """Poll-of-polls posterior draws of the national vote, in the electorate model's names (%).
+    All draws, in their original order, so electorate winners line up draw by draw with the
+    MMP seat simulation."""
     f = ROOT / "build" / "polls" / "current_draws.csv"
     if not f.exists():
         return None
     d = pd.read_csv(f)
-    if len(d) > n_max:
-        d = d.sample(n_max, random_state=1)
     out = pd.DataFrame({FROM_CODE[c]: d[c] * 100 for c in d.columns if c in FROM_CODE and c != "OTH"})
     out["Other"] = 100 - out.sum(axis=1)
     return out.reset_index(drop=True)
@@ -163,7 +163,11 @@ def export_projection(R, Sm, base, nat, ctx, calib, draws):
         for m in ("recent", "mean", "trend"):
             O = NM.seat_party_offsets(ctx["W"], NM.project_lean(ctx["L"], ctx["target"], m), ctx["adj"])
             S, Cs, seats = SIM.simulate_method(O, ctx["models"], ctx["pers"], draws, calib.get(m))
-            rows, dist, _ = SIM.summarise(S, Cs, seats)
+            rows, dist, _, win = SIM.summarise(S, Cs, seats)
+            if m == "recent":   # central method feeds the MMP seat simulation
+                codes = np.array([CODE[p] for p in NM.PARTIES])
+                pd.DataFrame(codes[win], columns=list(seats)).to_csv(
+                    ROOT / "build" / "booths" / "general_winner_draws.csv", index=False)
             for r in rows:
                 t = by_seat[r["seat"]].setdefault(m, {})
                 t["p_win"] = {CODE[p]: round(v, 3) for p, v in r["p_win"].items()}

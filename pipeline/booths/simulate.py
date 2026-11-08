@@ -81,4 +81,4 @@ def summarise(S, C, seats):
         vc = pd.Series(c).value_counts(normalize=True).sort_index()
         dist[p] = {"median": int(np.median(c)), "lo": int(np.percentile(c, 5)), "hi": int(np.percentile(c, 95)),
                    "mean": float(c.mean()), "dist": {int(k): float(v) for k, v in vc.items() if v >= 0.0005}}
-    return rows, dist, counts
+    return rows, dist, counts, win

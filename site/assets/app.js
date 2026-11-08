@@ -35,8 +35,10 @@
   }
 
   let P, SEATS, LOCS, ELEC, GEO, FINAL;
+  let ELEC_PRE = null;
   try {
     [P, SEATS] = await Promise.all([load("polls.json"), load("seats.json")]);
+    ELEC_PRE = await load("electorates.json").catch(() => null);
   } catch (e) {
     $("#updated").textContent = "Couldn't load the data. Please try again shortly.";
     console.error(e);
@@ -188,7 +190,12 @@
   const S = SEATS;
   const blocName = (ps) => ps.map(name).join(" + ");
   $("#seats-sub").textContent =
-    `From ${d3.format(",")(meta.diagnostics?.draws || 5000)} simulated elections at this week's estimate. A majority is 61 of 120 seats, or more if there's an overhang.`;
+    `From ${d3.format(",")(meta.diagnostics?.draws || 5000)} simulated elections at this week's estimate. A majority is 61 of 120 seats, or more if there's an overhang.${S.meta.total_seats.p_overhang > 0.05 ? ` Parliament has an overhang in ${Math.round(S.meta.total_seats.p_overhang * 100)}% of simulations (median ${S.meta.total_seats.median} seats), mostly from electorates won beyond a party's share of the party vote.` : ""}`;
+  if (S.meta.total_seats.p_overhang > 0.5 && S.seats.NAT && S.seats.NAT.median > 0) {
+    const nE = ELEC_PRE?.sim_counts?.recent?.NAT?.median;
+    $("#overhang-note").innerHTML = `<b>Why Parliament has more than 120 seats.</b> National and Labour are close on the party vote, but National is projected to win${nE ? ` about ${nE}` : " more"} of the 64 general electorates, partly because most ACT and NZ First voters give their electorate vote to the National candidate. When a party wins more electorates than its party vote entitles it to, it keeps them and Parliament grows (an overhang), which raises the bar for a majority. No major party has had an overhang before, and this depends on candidates and vote-splitting staying as they were; see <a href="#electorates">Electorates</a>.`;
+    $("#overhang-note").hidden = false;
+  }
   const H = S.headline;
   const hRows = Object.entries(H).map(([k, v]) => {
     const label = k.replace("Right bloc", blocName(S.meta.blocs.right)).replace("Left bloc", blocName(S.meta.blocs.left))
@@ -234,9 +241,14 @@
 
   // electorate assumptions (method section)
   const A = S.electorate_assumptions;
-  $("#assumptions").innerHTML = `<div class="table-wrap"><table class="data"><thead><tr><th class="l">Electorate</th><th class="l">Assumed chance of winning (at each party's current median)</th></tr></thead><tbody>${
-    Object.entries(A.probabilities).map(([e, pr]) => `<tr><td>${e}</td><td class="l">${Object.entries(pr).map(([p, v]) => `${sw(p)} ${name(p)} ${Math.round(v * 100)}%`).join(" &nbsp; ")}</td></tr>`).join("")
-  }</tbody></table></div>`;
+  const pRow = (pr) => Object.entries(pr).sort((a, b) => b[1] - a[1]).map(([p, v]) => `${sw(p)} ${name(p)} ${v < 0.01 && v > 0 ? "<1" : Math.round(v * 100)}%`).join(" &nbsp; ");
+  const keyRows = Object.entries(A.general_key_seats || {});
+  $("#assumptions").innerHTML = `${keyRows.length ? `<p>General electorates where a party other than National or Labour has a real chance, with their simulated chances (from the electorate model below):</p>
+    <div class="table-wrap"><table class="data"><thead><tr><th class="l">Electorate</th><th class="l">Chance of winning</th></tr></thead><tbody>${
+      keyRows.map(([e, pr]) => `<tr><td>${e}</td><td class="l">${pRow(pr)}</td></tr>`).join("")}</tbody></table></div>` : ""}
+    <p>Māori electorates (stated assumptions, at each party's current median vote):</p>
+    <div class="table-wrap"><table class="data"><thead><tr><th class="l">Electorate</th><th class="l">Assumed chance of winning</th></tr></thead><tbody>${
+      Object.entries(A.maori).map(([e, pr]) => `<tr><td>${e}</td><td class="l">${pRow(pr)}</td></tr>`).join("")}</tbody></table></div>`;
 
   // ------------------------------------------------------------------ house effects
   (function house() {
