@@ -543,6 +543,74 @@
   }
   drawPlaces();
 
+  // Ridgeline for whole-number counts (electorates won): one column per possible count,
+  // tallest column scaled to the row height; median dashed, 90% interval marked.
+  function drawSeatRidge(el, counts) {
+    el.innerHTML = "";
+    el.className = "ridge";
+    const ps = Object.keys(counts).filter((p) => counts[p].hi > 0 && meta.parties[p])
+      .sort((a, b) => counts[b].mean - counts[a].mean);
+    const W = Math.max(320, el.clientWidth || 760), small = W < 560;
+    const rowH = small ? 72 : 88, m = { t: 50, r: small ? 10 : 24, b: 10, l: 30 };
+    const Hh = m.t + m.b + ps.length * rowH;
+    const xmax = Math.max(10, Math.ceil((d3.max(ps, (p) => d3.max(Object.keys(counts[p].dist).map(Number))) + 2) / 5) * 5);
+    const x = d3.scaleLinear().domain([-0.6, xmax]).range([m.l, W - m.r]);
+    const axisY = m.t - 14, bottom = Hh - m.b;
+    const svg = d3.select(el).append("svg").attr("viewBox", `0 0 ${W} ${Hh}`).attr("role", "img")
+      .attr("aria-label", "Distribution of general electorates won by each party: " + ps.map((p) => `${name(p)} median ${counts[p].median} (90% interval ${counts[p].lo} to ${counts[p].hi})`).join("; "));
+    svg.append("text").attr("x", W - m.r).attr("y", 12).attr("text-anchor", "end").attr("font-size", 13).attr("fill", "var(--ink-2)").text("General electorates won (of 64)");
+    svg.append("g").attr("class", "axis").attr("transform", `translate(0,${axisY})`)
+      .call(d3.axisTop(x).tickValues(d3.ticks(0, xmax, small ? 4 : 8)).tickSize(6).tickFormat((d) => d))
+      .call((g) => g.select(".domain").attr("stroke", "var(--ink)").attr("stroke-width", 1.5))
+      .call((g) => g.selectAll(".tick line").attr("stroke", "var(--ink)"))
+      .call((g) => g.selectAll("text").attr("font-size", 13).attr("fill", "var(--ink-2)"));
+    // solid zero line at the left edge of the "0 seats" column
+    svg.append("line").attr("x1", x(-0.5)).attr("x2", x(-0.5)).attr("y1", axisY).attr("y2", bottom).attr("stroke", "var(--ink)").attr("stroke-width", 1.5);
+    const peak = rowH - 40, step = x(1) - x(0), colW = Math.max(1.5, Math.min(step - 2, 14));
+    ps.forEach((p, i) => {
+      const c = counts[p], base = m.t + i * rowH + rowH - 18, col = colour(p);
+      const ks = Object.keys(c.dist).map(Number).sort((a, b) => a - b);
+      const top = d3.max(ks, (k) => c.dist[k]);
+      const g = svg.append("g");
+      g.append("line").attr("x1", m.l).attr("x2", W - m.r).attr("y1", base).attr("y2", base).attr("stroke", "var(--rule)");
+      ks.forEach((k) => {
+        const h = (c.dist[k] / top) * peak;
+        g.append("rect").attr("x", x(k) - colW / 2).attr("y", base - h).attr("width", colW).attr("height", h)
+          .attr("rx", Math.min(2, colW / 2)).attr("fill", col).attr("fill-opacity", k >= c.lo && k <= c.hi ? 0.9 : 0.4);
+      });
+      // median: dashed line through its column, labelled above the tallest column
+      const hMed = ((c.dist[c.median] || 0) / top) * peak;
+      g.append("line").attr("x1", x(c.median)).attr("x2", x(c.median)).attr("y1", base).attr("y2", base - Math.max(hMed, 6))
+        .attr("stroke", p === "ACT" ? "rgba(30,35,38,.7)" : "rgba(255,255,255,.95)").attr("stroke-width", 1.6).attr("stroke-dasharray", "3 3");
+      g.append("text").attr("x", x(c.median)).attr("y", base - peak - 6).attr("text-anchor", "middle")
+        .attr("font-size", small ? 13 : 15).attr("font-weight", 800).attr("fill", "var(--ink)").text(c.median);
+      [c.lo, c.hi].forEach((v) => g.append("line").attr("x1", x(v)).attr("x2", x(v)).attr("y1", base).attr("y2", base + 9)
+        .attr("stroke", "var(--ink)").attr("stroke-width", 1.2));
+      if (c.lo === c.hi) { /* single value: nothing more to label */ }
+      else if (x(c.hi) - x(c.lo) < 50 || x(c.lo) - 24 < x(-0.5)) {
+        g.append("text").attr("x", Math.max(x(-0.5) + 4, x(c.lo) - colW / 2)).attr("y", base + 20).attr("font-size", 12).attr("fill", "var(--ink-2)").text(`${c.lo}–${c.hi}`);
+      } else {
+        [[c.lo, "end", -4], [c.hi, "start", 4]].forEach(([v, anchor, dx]) =>
+          g.append("text").attr("x", x(v) + dx).attr("y", base + 14).attr("text-anchor", anchor).attr("font-size", 12).attr("fill", "var(--ink-2)").text(v));
+      }
+      const label = g.append("text").attr("y", base - peak * 0.45).attr("font-size", small ? 15 : 20).attr("font-weight", 500).attr("fill", "var(--ink)").text(name(p));
+      const tw = label.node().getComputedTextLength();
+      const vis = ks.filter((k) => c.dist[k] >= top * 0.08);
+      const left = x(vis[0]) - colW / 2 - 10;
+      if (left - tw > m.l) label.attr("x", left).attr("text-anchor", "end");
+      else label.attr("x", x(vis[vis.length - 1]) + colW / 2 + 10).attr("text-anchor", "start");
+      g.append("rect").attr("x", m.l).attr("y", base - rowH + 18).attr("width", W - m.l - m.r).attr("height", rowH).attr("fill", "transparent")
+        .on("pointermove", (ev) => {
+          const [mx] = d3.pointer(ev); const k = Math.round(x.invert(mx));
+          const pk = c.dist[k] || 0;
+          showTip(`<div class="t-head">${sw(p)} ${name(p)}</div>Median ${c.median} electorates<br>90% interval ${c.lo}–${c.hi}<br>Exactly ${k}: ${pk >= 0.001 ? (pk * 100).toFixed(1) + "%" : "under 0.1%"} of simulations`, ev);
+        })
+        .on("pointerleave", hideTip);
+    });
+    d3.select(el).append("p").attr("class", "note").style("margin-top", "4px")
+      .text("Each column is how often a party won that many general electorates across the simulations. Paler columns fall outside the 90% interval. Māori electorates aren't included.");
+  }
+
   // ------------------------------------------------------------------ electorates
   (function electorates() {
     const sc = ELEC.scenario, prob = ELEC.n_draws > 0;
@@ -556,9 +624,7 @@
     const draw = () => {
       const m = $("#elec-method").value, q = $("#elec-search").value.trim().toLowerCase();
       if (prob) {
-        const sc2 = ELEC.sim_counts[m];
-        $("#elec-counts").innerHTML = Object.entries(sc2).filter(([, v]) => v.hi > 0).sort((a, b) => b[1].median - a[1].median)
-          .map(([p, v]) => `<div class="tile"><div class="name">${sw(p)}${name(p)}</div><div class="val">${v.median}</div><div class="int">${v.lo}–${v.hi} seats</div></div>`).join("");
+        drawSeatRidge($("#elec-counts"), ELEC.sim_counts[m]);
       } else {
         $("#elec-counts").innerHTML = Object.entries(ELEC.counts[m]).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1])
           .map(([p, v]) => `<div class="tile"><div class="name">${sw(p)}${name(p)}</div><div class="val">${v}</div></div>`).join("");
@@ -605,5 +671,5 @@
 
   // redraw trend on resize
   let rt;
-  window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { drawTrend(rangeKey); drawVote(); }, 200); });
+  window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { drawTrend(rangeKey); drawVote(); if (ELEC?.n_draws) drawSeatRidge($("#elec-counts"), ELEC.sim_counts[$("#elec-method").value]); }, 200); });
 })();
